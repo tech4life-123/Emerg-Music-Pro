@@ -59,7 +59,11 @@ Applied to `nuqstzxolrssorvovhqf` with the owner's delegated approval, after an 
 | `...000100_harden_tracks_and_audit` | Applied (recorded as `20261022170827`) |
 | `...000200_rights_records_and_gates` | Applied (`20261022170851`) |
 | `...000300_hide_audio_paths_from_clients` | Applied (`20261022170856`) |
-| `...000400_hide_suspended_artists_releases` | **Not applied, awaiting owner approval** (replaces one RLS policy; tested locally) |
+| `...000400_hide_suspended_artists_releases` | Applied via `alter policy` (the `drop policy` form was cancelled at the prompt); verified on live |
+| `...000500_move_policy_helpers_to_private_schema` | Applied (`20261022174007`). `is_admin` / `owns_artist` are no longer API functions; 7 admin functions re-created |
+| `...000600_user_deletion_keeps_audit_and_reviews` | Applied (`20261022174034`). Users with audit rows / reviews / rights declarations can now be deleted; audit rows survive with `actor_id` NULL |
+| `...000700_anon_cannot_read_artist_owner` | Applied (`20261022174021`) |
+| `...000800_rights_records_for_published_releases` | Applied (`20261022174026`). Artists can add a PENDING rights record to an already-published release |
 
 Live migration versions are timestamps of when they were applied and differ from the repo file prefixes; the SQL is identical.
 Do not run `supabase db push` blindly: reconcile history first (`supabase migration repair`).
@@ -73,3 +77,25 @@ Still to do manually: create the private storage bucket `media` (not public) in 
 2 existing published releases (until then `get_playback_target` returns nothing for them, which is intended);
 drop `backup_20261022` once you are satisfied (`drop schema backup_20261022 cascade;`).
 Revert 000300 only: `grant select on public.tracks to anon, authenticated;`.
+
+## 6. Defect round (2026-10-22, "solve all bugs")
+
+Fixed and verified on live (SQL checks + advisors), each with automated tests locally (`tests/db/defect_fixes.test.ts`,
+`catalog_visibility.test.ts`, `tests/integration/catalog-postgrest.test.ts`):
+
+| Defect | Fix |
+|---|---|
+| Suspended artist's published releases/tracks stayed readable via the API | 000400 |
+| Policy helpers callable as public RPCs (advisor WARN x4) | 000500 (warnings gone) |
+| Deleting a user with audit rows / reviews / declarations failed | 000600 |
+| Anonymous visitors could read `artists.owner_id` | 000700 |
+| Published releases could never receive a rights record (so never playable) | 000800 |
+| 2 tracks marked `ready` with no audio files in storage (0 objects, no bucket) | Set to `pending` (paths kept; originals in `backup_20261022`) |
+
+### Accepted / not fixable here
+- Advisor WARN on `artist_follower_count` (public aggregate, intentionally callable by everyone) and on the admin RPCs
+  (`approve/reject_artist_application`, `moderate_release`, `resolve_copyright_report`, `review_rights_record`): they must be
+  callable by signed-in users and check admin rights inside; they are not callable by `anon`.
+- Leaked-password protection is an Auth dashboard setting (Authentication > Providers/Policies); it cannot be changed with SQL.
+- `npm audit` reports 5 high in the lint toolchain (`braces` has no patched release). Dev-only; `npm audit --omit=dev` is 0.
+- A null `audit_log.actor_id` now also means "system/backend action" or "deleted account".

@@ -13,7 +13,7 @@ working music player yet.
 | Works (verified, see `docs/PHASE1_REPORT.md`) | Not built yet |
 |---|---|
 | Migrations that reproduce the live Supabase schema + additive hardening | Sign-in / sign-up UI |
-| 57 allow/deny authorization tests on real PostgreSQL 16 (baseline, proven gaps, hardening, rights and playback gates) | Playlists, likes/follows, share links |
+| Allow/deny authorization tests on real PostgreSQL 16 + catalog tests through a real PostgREST server (131 tests total) | Playlists, likes/follows, share links |
 | Signed short-lived upload/playback tokens, local private storage, Range streaming logic | Audio processing queue (uploads register `audio_path` only; track stays `pending`) |
 | FFmpeg worker (probe / AAC transcode / waveform) tested on a real file | Artist studio and admin dashboards (guarded placeholders only) |
 | Catalog pages: home, search, artist, release, track, genre; every state handled (Phase 2) | Player and playback UI (Phase 3) |
@@ -36,7 +36,9 @@ npm ci
 docker run -d --name emerg-pg -e POSTGRES_HOST_AUTH_METHOD=trust -p 54329:5432 postgres:16
 # (The tests default to postgres://postgres@127.0.0.1:54329/postgres. Override with TEST_DATABASE_URL.)
 
-# 2. Checks (what CI runs):
+# 2. Checks (what CI runs). The PostgREST integration test needs one pinned binary:
+scripts/fetch-postgrest.sh     # skipped automatically if absent
+
 npm run lint
 npm run typecheck
 npm test            # unit tests + database authorization tests
