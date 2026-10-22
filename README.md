@@ -19,8 +19,7 @@ working music player yet.
 | Responsive shell, design tokens, loading/empty/error/denied/not-configured states, PWA manifest + icons | Offline, payments, ads, royalties, native apps (excluded from Phase 1) |
 
 API routes (`/api/upload/*`, `/api/playback/authorize`, `/api/media/*`) are implemented over tested logic, but
-have **not been exercised against a live Supabase project**. **Read `docs/SUPABASE_RECONCILIATION.md` before
-applying any migration to the live project.**
+have **not been exercised against a live Supabase project**. The hardening migrations are applied to the live project; **read `docs/SUPABASE_RECONCILIATION.md`** for what changed and what is left to do.
 
 ## Requirements
 Node 22+, npm, FFmpeg (`ffmpeg`/`ffprobe` on PATH), and a PostgreSQL 16 server for the database tests
@@ -73,7 +72,7 @@ Regenerate the sample fixture: `npm run fixtures:generate`.
 Nothing below was done for you; no external account is connected.
 
 1. **GitHub repository:** create it, push this code, and CI (`.github/workflows/ci.yml`) will run.
-2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (back up, then apply migrations 000000-000300, then create a private `media` bucket). For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
+2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (hardening already applied; still create a private `media` bucket). For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
    Copy the URL, anon key and service-role key into `.env.local`. Then apply migrations with the Supabase CLI
    (`supabase link`, `supabase db push`), which uses `supabase/migrations/`. Do **not** use `npm run db:migrate --shim` against Supabase.
 3. **First administrator:** there is intentionally no UI to self-promote (column grants stop a user changing their

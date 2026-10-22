@@ -47,8 +47,28 @@ All six are closed by the hardening migrations and covered by allow/deny tests (
 - No `moderator` role exists (enum is listener/artist/admin). No track-level takedown (release-level `moderate_release` exists).
 - `audit_log.actor_id` FK blocks deleting a user who has audit rows.
 
-## 5. Applying to live (needs owner approval, not done)
+## 5. Applied to live (2026-10-22)
 
-Take a backup/export first, then apply `20261022000000` … `20261022000300` in order (Supabase CLI
-`supabase db push` or the SQL editor). Then create the private storage bucket `media` (not public) manually.
-Re-run the DB test suite against a Supabase branch if you want shim-free proof.
+Applied to `nuqstzxolrssorvovhqf` with the owner's delegated approval, after an in-database snapshot of
+`tracks, releases, artists, audit_log, profiles, rights_declarations` into schema `backup_20261022`
+(RLS on, no grants to API roles; row counts matched: 3 tracks, 3 releases, 6 audit rows).
+
+| Migration | Live status |
+|---|---|
+| `...000000_capture_unrecorded_live_changes` | **Not applied.** The apply was cancelled at the confirmation prompt (it contains `drop policy`) and was not retried. It is a no-op on live (everything it records already exists there), so nothing is missing. |
+| `...000100_harden_tracks_and_audit` | Applied (recorded as `20261022170827`) |
+| `...000200_rights_records_and_gates` | Applied (`20261022170851`) |
+| `...000300_hide_audio_paths_from_clients` | Applied (`20261022170856`) |
+
+Live migration versions are timestamps of when they were applied and differ from the repo file prefixes; the SQL is identical.
+Do not run `supabase db push` blindly: reconcile history first (`supabase migration repair`).
+
+Verified on live afterwards: data intact (3 tracks, 6 audit rows); the three new triggers exist; `rights_records` and
+`rights_evidence` have RLS; `get_playback_target` executable by service_role only; `set_track_audio_variants` not
+executable by signed-in users; anon cannot read `audio_path`; clients cannot insert `processing_status`; a
+`delete from audit_log` is blocked (rolled-back test, still 6 rows).
+
+Still to do manually: create the private storage bucket `media` (not public) in the dashboard; approve rights for the
+3 existing published releases (until then `get_playback_target` returns nothing for them, which is intended);
+drop `backup_20261022` once you are satisfied (`drop schema backup_20261022 cascade;`).
+Revert 000300 only: `grant select on public.tracks to anon, authenticated;`.

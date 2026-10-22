@@ -10,7 +10,7 @@ Date: 2026-10-22. Everything under "Verified" was executed in the build environm
 - Fixed a real race in `LocalStorage.put` (partial file could survive a failed upload), found by a flaky run
 
 ## NOT verified
-- Hardening migrations are **NOT applied to live Supabase** (needs owner approval; see `docs/SUPABASE_RECONCILIATION.md`)
+- Hardening migrations 000100-000300 ARE applied to live (checked with SQL on live, see `docs/SUPABASE_RECONCILIATION.md` section 5); the drift-capture migration 000000 was not (cancelled at a prompt; no-op on live)
 - RLS on a live Supabase project (tests use a test-only shim on vanilla Postgres)
 - API routes / Supabase clients against live Supabase; upload flow end to end; private `media` bucket does not exist yet
 - Any deployment, R2, hosted worker; the earlier `Emerg-Music` frontend (not reviewed)
@@ -20,7 +20,7 @@ Date: 2026-10-22. Everything under "Verified" was executed in the build environm
 `src/app/api/{upload/[token],playback/authorize,media/[token]}/route.ts`, admin page copy, unit tests, docs, config (archive excluded from tsc/eslint).
 
 ## Decisions needed from owner
-1. Approve applying migrations 000000-000300 to live (backup first). 000300 can break `select *` on tracks; the 3 published releases become unplayable until rights are approved.
+1. Approve rights for the 3 published releases (they are unplayable until then) and create the private `media` bucket. Drop `backup_20261022` when satisfied.
 2. Object storage (R2 is metered, not enabled), audio worker host, hosting plan, Supabase tier: `docs/COST_AND_DEPLOYMENT.md`.
 
 ## Known defects / limits
