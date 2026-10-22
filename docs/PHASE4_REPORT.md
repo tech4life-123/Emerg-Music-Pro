@@ -26,7 +26,7 @@ PRD scope: "Artist studio, submission review, rights workflow, takedown, audit l
 
 ## Known limitations (honest list)
 - **Sign-in was verified only against a TEST-ONLY auth shim**, never against live Supabase Auth. Test real sign-up/sign-in (and email confirmation) once against your project.
-- **Migration 001000 is not applied to live.** Until it is, live lacks track takedown, the submission gate and the hardened inserts. The new app screens that depend on it (takedown buttons, the stricter submit errors) will not work against live yet.
+- Migration 001000 was applied to live after this report was first written (verified; see SUPABASE_RECONCILIATION). The app has still not been run against live Supabase.
 - No rights **evidence upload** UI (the table and policies exist). Admins approve on the artist's declared record only.
 - No notifications to artists (they see status and notes in the Studio) and no `moderator` role (admin only).
 - Cover art and artist profile editing are not built.
@@ -41,7 +41,7 @@ PRD scope: "Artist studio, submission review, rights workflow, takedown, audit l
 - The auth shim, seeded passwords and generated secrets exist only in the local stack and are never used by the app in production.
 
 ## Exact next step
-1. Approve applying migration `20261022001000` to live (I checked: 0 reports, 0 pending applications). I will apply it with `alter` forms, verify, and re-run the advisors.
+1. (Done) Migration `20261022001000` applied to live and verified.
 2. In Supabase: enable email sign-in, decide on email confirmation, turn on leaked-password protection; then do one real sign-up/sign-in/sign-out.
 3. R2: create the scoped API token, set `R2_*` + `STORAGE_DRIVER=r2` (originals = `emerg-originals`, renditions = `emerg-music`) and run `npm run r2:smoke`.
 4. Then Phase 5 (per the PRD) or direct-to-R2 uploads first if you will host on Vercel.

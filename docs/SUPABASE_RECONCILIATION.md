@@ -65,7 +65,7 @@ Applied to `nuqstzxolrssorvovhqf` with the owner's delegated approval, after an 
 | `...000700_anon_cannot_read_artist_owner` | Applied (`20261022174021`) |
 | `...000800_rights_records_for_published_releases` | Applied (`20261022174026`). Artists can add a PENDING rights record to an already-published release |
 | `...000900_processing_jobs` | **Applied** with the owner's approval (2026-10-22) and verified: 4 functions service_role-only, RLS on, `original_key` unreadable by clients, clients cannot insert, anon cannot select |
-| `...001000_phase4_takedown_and_submission` | **NOT applied to live.** Tested on local PostgreSQL 16, through PostgREST and in a browser. Adds track takedown/restore, the submission completeness gate, hardened report/release/application inserts. Needs the owner's approval; live has 0 reports and 0 pending applications, so it is safe to apply (see `docs/PHASE4_REPORT.md`) |
+| `...001000_phase4_takedown_and_submission` | **Applied** with the owner's approval (2026-10-22), `alter policy` forms only, no destructive statements. Verified on live: tracks has `removed_at/removal_reason`; `takedown_track`/`restore_track` executable by signed-in users only (admin check inside), not anon; `get_playback_target` service_role only; anon can file a report (description) but cannot set `status`; clients cannot set release or application `status` on insert; report trigger present; data intact (3 tracks, 6 audit rows). Advisors: only the two new admin RPCs joined the accepted "admin check inside" warnings |
 
 Live migration versions are timestamps of when they were applied and differ from the repo file prefixes; the SQL is identical.
 Do not run `supabase db push` blindly: reconcile history first (`supabase migration repair`).

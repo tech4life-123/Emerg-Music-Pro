@@ -85,7 +85,7 @@ Sign-in in the local stack uses a TEST-ONLY auth shim (`scripts/lib/auth-shim.ts
 Nothing below was done for you; no external account is connected.
 
 1. **GitHub repository:** create it, push this code, and CI (`.github/workflows/ci.yml`) will run.
-2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (hardening and `000900_processing_jobs` applied; `001000_phase4_takedown_and_submission` is NOT applied yet). Audio does not use Supabase Storage. For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
+2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (hardening and `000900_processing_jobs` applied; `001000_phase4_takedown_and_submission` also applied). Audio does not use Supabase Storage. For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
    Copy the URL, anon key and service-role key into `.env.local`. Then apply migrations with the Supabase CLI
    (`supabase link`, `supabase db push`), which uses `supabase/migrations/`. Do **not** use `npm run db:migrate --shim` against Supabase.
 3. **First administrator:** there is intentionally no UI to self-promote (column grants stop a user changing their
