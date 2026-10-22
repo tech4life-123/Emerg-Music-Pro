@@ -1,0 +1,22 @@
+{
+  "_notice": "SAMPLE DATA FOR DEVELOPMENT ONLY. This is NOT a licensed catalog. Names are fictional, the audio is a synthesized test tone, and there is no artwork. Never import this into a production database or present it to listeners as real music.",
+  "isSampleData": true,
+  "artist": {
+    "slug": "sample-artist-fixture",
+    "name": "Sample Artist (Fixture)",
+    "bio": "Fictional placeholder artist used only for local development and automated tests."
+  },
+  "release": { "title": "Sample Release (Fixture)", "type": "single" },
+  "tracks": [
+    {
+      "title": "Test Tone 440 Hz (Fixture)",
+      "trackNumber": 1,
+      "audioFile": "sample-tone-440hz.wav",
+      "rights": {
+        "basis": "owner",
+        "rightsHolderName": "Emerg Music development fixture (synthesized tone, no third-party rights)",
+        "territories": ["WW"]
+      }
+    }
+  ]
+}
