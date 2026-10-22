@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Cover, Outcome } from "@/components/catalog/Catalog";
+import { PlayButton } from "@/components/player/PlayButton";
 import { getCatalog } from "@/lib/catalog";
 import { formatDuration } from "@/lib/catalog/query";
 
@@ -24,7 +25,11 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
                 {track.explicit ? " · Explicit" : ""}
                 {track.genre ? <> · <Link href={`/genres/${track.genre.slug}`}>{track.genre.name}</Link></> : null}
               </p>
-              {track.audioReady ? null : <p className="muted">Audio is not available yet.</p>}
+              {track.audioReady ? (
+                <PlayButton track={{ id: track.id, title: track.title, artist: release.artist.name, release: release.title }} variant="button" />
+              ) : (
+                <p className="muted">Audio is not available yet.</p>
+              )}
             </div>
           </div>
           {credits.length > 0 ? (

@@ -16,7 +16,7 @@ export interface TrackItem {
   trackNumber: number | null;
   durationMs: number | null;
   explicit: boolean;
-  /** Audio exists and has been processed. Playback itself is a later phase. */
+  /** Audio has been validated and transcoded (processing_status = ready). Whether it may be PLAYED is still decided per request by the playback gate (rights, territory, publication). */
   audioReady: boolean;
 }
 export interface Credit {

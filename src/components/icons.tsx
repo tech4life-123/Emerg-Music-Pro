@@ -32,3 +32,18 @@ export const MusicIcon = (p: SVGProps<SVGSVGElement>) => (
 export const PlugIcon = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base} {...p}><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4" /></svg>
 );
+export const PlayIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} fill="currentColor" stroke="none" {...p}><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
+);
+export const PauseIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} fill="currentColor" stroke="none" {...p}><rect x="6" y="5" width="4.5" height="14" rx="1.2" /><rect x="13.5" y="5" width="4.5" height="14" rx="1.2" /></svg>
+);
+export const NextIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} {...p}><path d="M6 5l9 7-9 7z" fill="currentColor" /><path d="M18 5v14" /></svg>
+);
+export const PrevIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} {...p}><path d="M18 5l-9 7 9 7z" fill="currentColor" /><path d="M6 5v14" /></svg>
+);
+export const CloseIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} {...p}><path d="M6 6l12 12M18 6L6 18" /></svg>
+);

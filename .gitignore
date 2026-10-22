@@ -12,3 +12,4 @@ storage-local/
 .DS_Store
 npm-debug.log*
 .tools/
+.local-stack/

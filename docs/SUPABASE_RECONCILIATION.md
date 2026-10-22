@@ -64,6 +64,7 @@ Applied to `nuqstzxolrssorvovhqf` with the owner's delegated approval, after an 
 | `...000600_user_deletion_keeps_audit_and_reviews` | Applied (`20261022174034`). Users with audit rows / reviews / rights declarations can now be deleted; audit rows survive with `actor_id` NULL |
 | `...000700_anon_cannot_read_artist_owner` | Applied (`20261022174021`) |
 | `...000800_rights_records_for_published_releases` | Applied (`20261022174026`). Artists can add a PENDING rights record to an already-published release |
+| `...000900_processing_jobs` | **NOT applied to live.** Tested on local PostgreSQL 16 and through PostgREST. Adds `processing_jobs` + 4 service-role-only functions. Apply only after the owner agrees |
 
 Live migration versions are timestamps of when they were applied and differ from the repo file prefixes; the SQL is identical.
 Do not run `supabase db push` blindly: reconcile history first (`supabase migration repair`).

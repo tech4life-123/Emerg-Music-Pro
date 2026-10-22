@@ -25,8 +25,7 @@ export default async function ReleasePage({ params }: { params: Promise<{ id: st
           </div>
           <section className="section" aria-labelledby="tracks">
             <h2 id="tracks">Tracks</h2>
-            {tracks.length === 0 ? <EmptyState title="No tracks listed">This release has no tracks yet.</EmptyState> : <TrackList tracks={tracks} />}
-            <p className="muted">Playback arrives with the audio phase. Nothing here can be played yet.</p>
+            {tracks.length === 0 ? <EmptyState title="No tracks listed">This release has no tracks yet.</EmptyState> : <TrackList tracks={tracks} context={{ artist: release.artist.name, release: release.title }} />}
           </section>
         </>
       )}

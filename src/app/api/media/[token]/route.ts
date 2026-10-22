@@ -18,7 +18,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
   if (!v.ok) return json({ error: "unavailable" }, 404);
 
   const storage = getStorage();
-  const stat = await storage.stat("media", v.claims.key).catch(() => null);
+  // Only the "renditions" bucket is ever streamed; originals are unreachable from this route by construction.
+  const stat = await storage.stat("renditions", v.claims.key).catch(() => null);
   if (!stat) return json({ error: "unavailable" }, 404);
 
   const ext = v.claims.key.split(".").pop() ?? "";
@@ -33,7 +34,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
   if (range.kind === "unsatisfiable") return new Response(null, { status: 416, headers: { ...headers, "Content-Range": `bytes */${stat.size}` } });
 
   const part = range.kind === "range" ? { start: range.start, end: range.end } : undefined;
-  const stream = Readable.toWeb(storage.createReadStream("media", v.claims.key, part)) as ReadableStream;
+  let source;
+  try {
+    source = await storage.read("renditions", v.claims.key, part);
+  } catch {
+    return json({ error: "unavailable" }, 404);
+  }
+  const stream = Readable.toWeb(source) as ReadableStream;
   if (part) {
     return new Response(stream, {
       status: 206,

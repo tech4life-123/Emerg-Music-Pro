@@ -18,6 +18,19 @@ are *off by default* and need your explicit approval.
 | SMS / phone auth | Not implemented | **No.** SMS is per-message billing | Only if you want it |
 | Payments / ads / royalties | Not implemented (excluded) | n/a | Later phase |
 
+## Decision recorded: Cloudflare R2 for audio (owner approved, 2026-10-22)
+The owner chose R2. What that does and does not mean:
+- Approved: using R2 for the `originals` and `renditions` buckets. **Not** approved and not done: any paid plan, any other metered service.
+- R2 has a free allowance and then charges for storage and operations (no egress fee). Check the current R2 pricing page and set
+  a billing alert before real listeners arrive. The sizing note below still applies.
+- **Nothing has been run against a real bucket.** The two buckets already on the account (`emerg-audio`, `emerg-music`) were
+  not touched; their purpose and contents are unknown to the build. Use two PRIVATE buckets and one token scoped to them
+  (steps in `docs/PHASE3_REPORT.md`), then run `npm run r2:smoke`.
+- **Upload path vs. hosting:** uploads currently stream through the Next.js route. That is fine on a long-running Node server
+  and impossible on Vercel serverless (request body limit of roughly 4.5 MB). If the web app goes on Vercel, uploads must go
+  directly to R2 with short-lived presigned URLs, which also needs a CORS rule on the originals bucket. That is a separate, small change.
+- **Worker host:** the worker needs a machine that stays on and has FFmpeg. For a private pilot that can be your computer.
+
 ## Services that cannot be assumed to operate within $0
 
 ### 1. Audio object storage (the main cost driver)

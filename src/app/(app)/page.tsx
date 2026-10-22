@@ -49,7 +49,7 @@ export default async function HomePage() {
       <section className="section" aria-labelledby="sections-to-come">
         <h2 id="sections-to-come">Coming in later phases</h2>
         <p className="muted">
-          Playback, playlists, trending and the artist studio are not built yet, so they are not shown. See the{" "}
+          Playlists, trending and the artist studio are not built yet, so they are not shown. See the{" "}
           <Link href="/onboarding">welcome screen</Link> for what Emerg Music is about.
         </p>
       </section>

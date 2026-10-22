@@ -1,7 +1,7 @@
 import "server-only";
 import { getServerEnv } from "@/lib/env";
 import { authorizePlayback, authorizeUpload, type PlaybackTarget } from "@/lib/media/authorization";
-import { createStorage } from "@/lib/media/storage";
+import { storageFromEnv } from "@/lib/media/storage-config";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createUserClient } from "@/lib/supabase/server";
@@ -17,9 +17,9 @@ function build() {
 }
 export const limiters = (g.__emergLimiters ??= build());
 
+const gs = globalThis as unknown as { __emergStorage?: ReturnType<typeof storageFromEnv> };
 export function getStorage() {
-  const env = getServerEnv();
-  return createStorage({ driver: env.STORAGE_DRIVER, localDir: env.LOCAL_STORAGE_DIR });
+  return (gs.__emergStorage ??= storageFromEnv(getServerEnv()));
 }
 
 /**

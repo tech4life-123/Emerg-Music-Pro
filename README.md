@@ -13,11 +13,11 @@ working music player yet.
 | Works (verified, see `docs/PHASE1_REPORT.md`) | Not built yet |
 |---|---|
 | Migrations that reproduce the live Supabase schema + additive hardening | Sign-in / sign-up UI |
-| Allow/deny authorization tests on real PostgreSQL 16 + catalog tests through a real PostgREST server (131 tests total) | Playlists, likes/follows, share links |
-| Signed short-lived upload/playback tokens, local private storage, Range streaming logic | Audio processing queue (uploads register `audio_path` only; track stays `pending`) |
+| Allow/deny authorization tests on real PostgreSQL 16 + catalog tests through a real PostgREST server (169 tests total) | Playlists, likes/follows, share links |
+| Signed short-lived upload/playback tokens, private storage (local disk or Cloudflare R2 driver), Range streaming | Upload screen for artists (the API exists; the Studio UI does not) |
 | FFmpeg worker (probe / AAC transcode / waveform) tested on a real file | Artist studio and admin dashboards (guarded placeholders only) |
-| Catalog pages: home, search, artist, release, track, genre; every state handled (Phase 2) | Player and playback UI (Phase 3) |
-| Responsive shell, design tokens, loading/empty/error/denied/not-configured states, PWA manifest + icons | Offline, payments, ads, royalties, native apps (excluded from Phase 1) |
+| Catalog pages: home, search, artist, release, track, genre; every state handled (Phase 2) | Waveform display, queue editing, offline |
+| Audio pipeline (Phase 3): quarantine upload, ffprobe validation, AAC low/std renditions, job queue with retries, persistent player | Offline, payments, ads, royalties, native apps (excluded for now) |
 
 API routes (`/api/upload/*`, `/api/playback/authorize`, `/api/media/*`) are implemented over tested logic, but
 have **not been exercised against a live Supabase project**. The hardening migrations are applied to the live project; **read `docs/SUPABASE_RECONCILIATION.md`** for what changed and what is left to do.
@@ -54,6 +54,15 @@ of fake data.
 
 Regenerate the sample fixture: `npm run fixtures:generate`.
 
+### Audio pipeline, locally ($0, no accounts)
+```bash
+npm run local-stack     # local Postgres + PostgREST + a /rest/v1 shim, seeded with ONE published release of synthesized tones
+                        # that went through the real upload -> validate -> transcode -> ready path. Writes .local-stack/env
+set -a; . .local-stack/env; set +a; npm run build && npx next start      # NEXT_PUBLIC_* values are baked in at build time
+npm run worker -- --once   # process queued uploads (needs ffmpeg and the same env as the web app)
+```
+Sign-in is not available in the local stack (no auth server), so it demonstrates browsing and playback, not uploads from the UI.
+
 ## Environment variables
 
 | Variable | Required | Scope | Notes |
@@ -76,14 +85,15 @@ Regenerate the sample fixture: `npm run fixtures:generate`.
 Nothing below was done for you; no external account is connected.
 
 1. **GitHub repository:** create it, push this code, and CI (`.github/workflows/ci.yml`) will run.
-2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (hardening already applied; still create a private `media` bucket). For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
+2. **Supabase:** the live project already exists; see `docs/SUPABASE_RECONCILIATION.md` (hardening already applied; migration `000900_processing_jobs` is NOT applied yet). Audio does not use Supabase Storage. For a fresh dev project: create one at supabase.com **without upgrading or adding billing**.
    Copy the URL, anon key and service-role key into `.env.local`. Then apply migrations with the Supabase CLI
    (`supabase link`, `supabase db push`), which uses `supabase/migrations/`. Do **not** use `npm run db:migrate --shim` against Supabase.
 3. **First administrator:** there is intentionally no UI to self-promote (column grants stop a user changing their
    own `profiles.role`). After signing up a user, promote them once in the Supabase SQL editor (runs as the project owner):
    `update public.profiles set role = 'admin' where id = '<user uuid>';`
 4. **Auth settings:** enable email sign-in in the Supabase dashboard (sign-in UI is not built yet).
-5. **Storage / worker decision (blocks any deployment):** read `docs/COST_AND_DEPLOYMENT.md`.
+5. **Cloudflare R2 (approved):** create two PRIVATE buckets, one API token limited to those two buckets, set the `R2_*` variables and `STORAGE_DRIVER=r2`, then run `npm run r2:smoke`. Details in `docs/PHASE3_REPORT.md`.
+6. **Worker host:** `npm run worker` must run on a machine that stays on (your computer for a pilot, or a small VM). Serverless hosting cannot run FFmpeg jobs. See `docs/COST_AND_DEPLOYMENT.md`.
 
 ## Repository map
 See `docs/IMPLEMENTATION_PLAN.md` for the file-by-file plan. Highlights:
@@ -110,7 +120,10 @@ Anything not listed there has not been verified.
 - API routes and Supabase client code are not integration-tested against a live Supabase.
 - Rate limiting is in-memory (single instance).
 - Issued playback tokens remain valid until expiry (default 5 min) after a takedown; new authorizations are blocked immediately.
-- Uploads register `tracks.audio_path` and the track stays `pending`; validation/transcoding is not wired to a queue yet, so nothing becomes playable through the app yet.
+- The R2 driver is tested against an in-process S3-compatible server through the real AWS SDK, **not against a real R2 bucket** (`npm run r2:smoke` does that; it has not been run).
+- AAC playback was not verified in a real browser: the only browser available in the build sandbox has no AAC decoder. The player, authorization, Range and navigation behaviour were verified with MP3 data in place of the AAC renditions. Test AAC in Chrome, Safari and Firefox.
+- Uploads are proxied through the Next.js route. That works on a long-running Node server but NOT on Vercel serverless (about 4.5 MB request body limit); direct-to-R2 uploads are the planned replacement.
+- A track whose upload registered but whose job could not be queued stays `pending` with no job (the upload returns `queue_failed`; the artist re-uploads). There is no sweeper yet.
 - Dev-only audit findings: `npm audit` reports 5 high findings in the lint toolchain
   (`eslint-config-next` -> `fast-glob` -> `braces`). `npm audit --omit=dev` reports 0. The suggested forced fix
   downgrades Next tooling, so it was not applied.

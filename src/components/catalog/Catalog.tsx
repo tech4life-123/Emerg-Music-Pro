@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PlayButton } from "@/components/player/PlayButton";
+import type { PlayerTrack } from "@/components/player/PlayerProvider";
 import { EmptyState, ErrorState, NotConfigured } from "@/components/states/States";
 import { formatDuration, formatReleaseType, placeholderHues } from "@/lib/catalog/query";
 import type { ReleaseSummary, Result, TrackItem } from "@/lib/catalog/types";
@@ -27,12 +29,16 @@ export function ReleaseGrid({ releases }: { releases: ReleaseSummary[] }) {
   );
 }
 
-export function TrackList({ tracks }: { tracks: TrackItem[] }) {
+export function TrackList({ tracks, context }: { tracks: TrackItem[]; context?: { artist: string; release: string } }) {
+  const asPlayer = (t: TrackItem): PlayerTrack => ({ id: t.id, title: t.title, artist: context?.artist ?? "", release: context?.release ?? "" });
+  const queue = context ? tracks.filter((t) => t.audioReady).map(asPlayer) : [];
   return (
     <ol className="tracklist">
       {tracks.map((t) => (
         <li key={t.id}>
-          <span className="tracklist-n">{t.trackNumber ?? "–"}</span>
+          <span className="tracklist-n">
+            {context && t.audioReady ? <PlayButton track={asPlayer(t)} queue={queue} /> : (t.trackNumber ?? "–")}
+          </span>
           <span className="tracklist-main">
             <Link href={`/tracks/${t.id}`} className="tracklist-title">
               {t.title}

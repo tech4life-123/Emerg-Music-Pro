@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AccountIcon, HomeIcon, LibraryIcon, SearchIcon, ShieldIcon, StudioIcon } from "@/components/icons";
+import { PlayerProvider } from "@/components/player/PlayerProvider";
 import { NavLinks, type NavItem } from "./NavLinks";
 
 const primary: NavItem[] = [
@@ -28,6 +29,7 @@ function Brand({ size = 36 }: { size?: number }) {
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
+    <PlayerProvider>
     <div className="shell">
       <a className="skip-link" href="#main">
         Skip to content
@@ -55,5 +57,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <NavLinks items={primary} label="Main" />
       </div>
     </div>
+    </PlayerProvider>
   );
 }
