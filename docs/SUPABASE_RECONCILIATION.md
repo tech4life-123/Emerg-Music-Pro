@@ -31,7 +31,7 @@ All six are closed by the hardening migrations and covered by allow/deny tests (
 
 ## 3. What changes for existing data and clients
 
-- The 3 existing published releases have **no approved rights record**, so the new playback gate refuses them
+- The 2 existing published releases have **no approved rights record**, so the new playback gate refuses them
   until an admin approves rights (`review_rights_record`). Rights are never invented or back-filled.
 - Any client that reads `audio_path`, `audio_low_path` or `audio_std_path` from `tracks`, or does
   `select *` on `tracks`, will get a permission error (migration 000300). Revert: `grant select on public.tracks to anon, authenticated;`.
@@ -69,6 +69,6 @@ executable by signed-in users; anon cannot read `audio_path`; clients cannot ins
 `delete from audit_log` is blocked (rolled-back test, still 6 rows).
 
 Still to do manually: create the private storage bucket `media` (not public) in the dashboard; approve rights for the
-3 existing published releases (until then `get_playback_target` returns nothing for them, which is intended);
+2 existing published releases (until then `get_playback_target` returns nothing for them, which is intended);
 drop `backup_20261022` once you are satisfied (`drop schema backup_20261022 cascade;`).
 Revert 000300 only: `grant select on public.tracks to anon, authenticated;`.

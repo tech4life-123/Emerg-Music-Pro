@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "A Liberia-first music streaming platform for authorized music.",
   applicationName: "Emerg Music",
   appleWebApp: { capable: true, title: "Emerg Music", statusBarStyle: "black-translucent" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: "/icon.png", apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

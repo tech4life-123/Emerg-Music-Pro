@@ -20,7 +20,7 @@ Date: 2026-10-22. Everything under "Verified" was executed in the build environm
 `src/app/api/{upload/[token],playback/authorize,media/[token]}/route.ts`, admin page copy, unit tests, docs, config (archive excluded from tsc/eslint).
 
 ## Decisions needed from owner
-1. Approve rights for the 3 published releases (they are unplayable until then) and create the private `media` bucket. Drop `backup_20261022` when satisfied.
+1. Approve rights for the 2 published releases (they are unplayable until then) and create the private `media` bucket. Drop `backup_20261022` when satisfied.
 2. Object storage (R2 is metered, not enabled), audio worker host, hosting plan, Supabase tier: `docs/COST_AND_DEPLOYMENT.md`.
 
 ## Known defects / limits

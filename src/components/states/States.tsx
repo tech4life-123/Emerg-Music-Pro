@@ -49,7 +49,7 @@ export function NotConfigured({ what = "Accounts and the catalog" }: { what?: st
   return (
     <Panel tone="state-empty" icon={<PlugIcon />} title="Backend not connected">
       <p>
-        {what} need a Supabase project, and none is configured for this environment. See the README for the two environment variables to set.
+        {what} {what.includes(" and ") ? "need" : "needs"} a Supabase project, and none is configured for this environment. See the README for the two environment variables to set.
       </p>
     </Panel>
   );
