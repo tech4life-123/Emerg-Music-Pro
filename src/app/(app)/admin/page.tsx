@@ -1,24 +1,21 @@
 import type { Metadata } from "next";
-import { EmptyState, NotConfigured, PermissionDenied } from "@/components/states/States";
-import { evaluateAccess, getViewer } from "@/lib/auth/viewer";
+import Link from "next/link";
+import { createUserClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const access = evaluateAccess(await getViewer(), ["admin"]);
+  const db = (await createUserClient())!;
+  const count = async (table: string, col: string, val: string) =>
+    (await db.from(table).select("id", { count: "exact", head: true }).eq(col, val)).count ?? 0;
+  const [apps, review, reports] = await Promise.all([
+    count("artist_applications", "status", "pending"), count("releases", "status", "in_review"), count("copyright_reports", "status", "received"),
+  ]);
+  const items: [string, number, string][] = [["Applications waiting", apps, "/admin/applications"], ["Releases in review", review, "/admin/reviews"], ["New copyright reports", reports, "/admin/reports"]];
   return (
-    <>
-      <h1>Administration</h1>
-      {access.ok ? (
-        <EmptyState title="The admin dashboard is not built yet">
-          You have staff access. The review queue, rights cases and audit log arrive in a later phase.
-        </EmptyState>
-      ) : access.reason === "unconfigured" ? (
-        <NotConfigured what="The admin area" />
-      ) : (
-        <PermissionDenied title="Admin access required">This area is only for administrators.</PermissionDenied>
-      )}
-    </>
+    <ul className="panel-list">
+      {items.map(([label, n, href]) => <li key={href}><Link href={href}><strong>{n}</strong> {label}</Link></li>)}
+    </ul>
   );
 }

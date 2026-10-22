@@ -23,7 +23,7 @@ afterAll(async () => db.drop());
 
 async function publishedRelease() {
   const rel = await createDraftRelease(db.pool, alice, aliceArtist, "Live release");
-  const trk = await createTrack(db.pool, alice, aliceArtist, rel);
+  const trk = await createTrack(db.pool, alice, aliceArtist, rel, "Sample Track", { pending: true });
   await query(db.pool, user(alice), "insert into public.rights_declarations (release_id, user_id, statement_version) values ($1,$2,'v1')", [rel, alice]);
   await query(db.pool, user(alice), "update public.releases set status = 'in_review' where id = $1", [rel]);
   await query(db.pool, user(admin), "select public.moderate_release($1, 'published', null)", [rel]);
@@ -43,11 +43,11 @@ describe("GAPS in the live schema before hardening", () => {
     const { rel, trk } = await publishedRelease();
     const swap = await query(db.pool, user(alice), "update public.tracks set audio_path = $2 where id = $1", [trk, `audio/${aliceArtist}/${trk}/swapped.wav`]);
     expect(swap.rowCount).toBe(1);
-    await createTrack(db.pool, alice, aliceArtist, rel, "added after approval"); // also allowed
+    await createTrack(db.pool, alice, aliceArtist, rel, "added after approval", { pending: true }); // also allowed
   });
   it("GAP 3: any artist can mark their own track 'ready' via set_track_audio_variants", async () => {
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
-    const trk = await createTrack(db.pool, alice, aliceArtist, rel);
+    const trk = await createTrack(db.pool, alice, aliceArtist, rel, "Sample Track", { pending: true });
     await query(db.pool, user(alice), "select public.set_track_audio_variants($1,'ready',null,$2,1000)", [trk, `audio/${aliceArtist}/${trk}/x.m4a`]);
     const r = await query<{ processing_status: string }>(db.pool, superuser, "select processing_status from public.tracks where id = $1", [trk]);
     expect(r.rows[0]?.processing_status).toBe("ready");

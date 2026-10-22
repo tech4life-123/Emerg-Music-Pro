@@ -128,7 +128,13 @@ export async function createDraftRelease(pool: Pool, ownerId: string, artistId: 
   return r.rows[0]!.id;
 }
 
-export async function createTrack(pool: Pool, ownerId: string, artistId: string, releaseId: string, title = "Sample Track"): Promise<string> {
+/**
+ * Creates a track through the same INSERT an artist would do. By default the track is then marked processed (`ready`) the way the
+ * worker would, because a release can only be SUBMITTED once every track is ready. Pass { pending: true } to keep it unprocessed.
+ */
+export async function createTrack(
+  pool: Pool, ownerId: string, artistId: string, releaseId: string, title = "Sample Track", opts: { pending?: boolean } = {},
+): Promise<string> {
   const id = randomUUID();
   const genre = await genreId(pool);
   await as(pool, user(ownerId), (c) =>
@@ -138,7 +144,15 @@ export async function createTrack(pool: Pool, ownerId: string, artistId: string,
       [id, releaseId, artistId, title, `audio/${artistId}/${id}/original.wav`, genre],
     ),
   );
+  if (!opts.pending) await markReady(pool, artistId, id);
   return id;
+}
+
+/** What the worker does when it finishes: record renditions and set the track `ready`. */
+export async function markReady(pool: Pool, artistId: string, trackId: string): Promise<void> {
+  await as(pool, service, (c) =>
+    c.query("select public.set_track_audio_variants($1, 'ready', $2, $3, 2000)", [trackId, `audio/${artistId}/${trackId}/low.m4a`, `audio/${artistId}/${trackId}/std.m4a`]),
+  );
 }
 
 export interface RightsOptions {

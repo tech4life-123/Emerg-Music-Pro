@@ -55,6 +55,7 @@ describe("rights records", () => {
   });
   it("DENIED: no new record once the release has been submitted", async () => {
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
+    await createTrack(db.pool, alice, aliceArtist, rel);
     await declareRights(db.pool, alice, rel);
     await query(db.pool, user(alice), "update public.releases set status = 'in_review' where id = $1", [rel]);
     await expect(insertRecord(alice, rel)).rejects.toThrow(/row-level security/);

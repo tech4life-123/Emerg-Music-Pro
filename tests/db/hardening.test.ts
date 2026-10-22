@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  anon, createApprovedArtist, createDraftRelease, createTestDb, createTrack, createUser, genreId, goLive, makeAdmin,
+  anon, createApprovedArtist, createDraftRelease, createTestDb, createTrack, createUser, declareRights, genreId, goLive, makeAdmin,
   query, service, superuser, user, type Live, type TestDb,
 } from "./helpers";
 
@@ -31,7 +31,7 @@ describe("1. clients cannot set processing results on insert", () => {
   });
   it("ALLOWED: a normal track insert into a draft release, starting as 'pending'", async () => {
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
-    const id = await createTrack(db.pool, alice, aliceArtist, rel);
+    const id = await createTrack(db.pool, alice, aliceArtist, rel, "Sample Track", { pending: true });
     expect((await query<{ processing_status: string }>(db.pool, superuser, "select processing_status from public.tracks where id = $1", [id])).rows[0]?.processing_status).toBe("pending");
   });
 });
@@ -63,7 +63,7 @@ describe("2. audio is locked once a release leaves draft", () => {
     // same rule while in review
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
     const trk = await createTrack(db.pool, alice, aliceArtist, rel);
-    await query(db.pool, user(alice), "insert into public.rights_declarations (release_id, user_id, statement_version) values ($1,$2,'v1')", [rel, alice]);
+    await declareRights(db.pool, alice, rel);
     await query(db.pool, user(alice), "update public.releases set status = 'in_review' where id = $1", [rel]);
     await expect(query(db.pool, user(alice), "update public.tracks set audio_path = $2 where id = $1", [trk, `audio/${aliceArtist}/${trk}/n.wav`])).rejects.toThrow(/draft/);
   });
@@ -87,7 +87,7 @@ describe("3. only the trusted backend records processing results", () => {
   let trk: string;
   beforeAll(async () => {
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
-    trk = await createTrack(db.pool, alice, aliceArtist, rel);
+    trk = await createTrack(db.pool, alice, aliceArtist, rel, "Sample Track", { pending: true });
   });
   it("DENIED: artist, admin (via the API), anon", async () => {
     for (const who of [user(alice), user(admin), anon]) {

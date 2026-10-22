@@ -8,7 +8,8 @@
  *   npx tsx --conditions=react-server scripts/local-stack.ts      # prints the env for `npm run dev`, then keeps running
  *
  * NOT for production: the Supabase shim, the generated JWT secret and the seeded data exist only on this machine.
- * Sign-in is NOT available in this stack (no auth server): it demonstrates browsing + playback, not accounts.
+ * Sign-in uses a TEST-ONLY auth shim (scripts/lib/auth-shim.ts). Seeded accounts (password "preview-password-1"):
+ *   admin@preview.test (administrator) and artist@preview.test (approved artist who owns the seeded release).
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
@@ -25,6 +26,7 @@ import { runOnce } from "../src/lib/worker/pipeline";
 import { createSupabaseJobStore } from "../src/lib/worker/supabase-store";
 import { ADMIN_URL, createApprovedArtist, createDraftRelease, createUser, declareRights, makeAdmin, query, user, as, superuser } from "../tests/db/helpers";
 import { applyMigrations } from "./lib/migrate";
+import { createAuthShim } from "./lib/auth-shim";
 
 const ROOT = path.resolve(__dirname, "..");
 const BIN = process.env.POSTGREST_BIN ?? path.join(ROOT, ".tools/postgrest/postgrest");
@@ -78,9 +80,11 @@ async function main() {
     try { if ((await fetch(`${base}/`)).ok) break; } catch { /* starting */ }
     await new Promise((r) => setTimeout(r, 250));
   }
+  const authPool = new (await import("pg")).Pool({ connectionString: u.toString(), max: 2 });
+  const authShim = createAuthShim({ secret, pool: authPool });
   const api = createServer((req, res) => {
     const target = (req.url ?? "/").replace(/^\/rest\/v1/, "") || "/";
-    if (req.url?.startsWith("/auth/")) { res.writeHead(401, { "Content-Type": "application/json" }); return void res.end('{"msg":"no auth server in the local stack"}'); }
+    if (req.url?.startsWith("/auth/")) return void authShim.handle(req, res);
     const up = request({ host: "127.0.0.1", port: PGRST_PORT, path: target, method: req.method, headers: req.headers }, (r) => { res.writeHead(r.statusCode ?? 502, r.headers); r.pipe(res); });
     up.on("error", () => { res.writeHead(502); res.end(); });
     req.pipe(up);
@@ -92,6 +96,11 @@ async function main() {
   const admin = await makeAdmin(db);
   const owner = await createUser(db, "preview-artist");
   const artist = await createApprovedArtist(db, admin, owner, "Preview Artist (fictional)");
+  const PW = "preview-password-1";
+  await query(db, superuser, "update auth.users set email = 'admin@preview.test' where id = $1", [admin]);
+  await query(db, superuser, "update auth.users set email = 'artist@preview.test' where id = $1", [owner]);
+  authShim.register("admin@preview.test", admin, PW);
+  authShim.register("artist@preview.test", owner, PW);
   const release = await createDraftRelease(db, owner, artist, "Placeholder Tones (sample)");
   const genre = (await query<{ id: string }>(db, superuser, "select id from public.genres order by slug limit 1")).rows[0]!.id;
   await query(db, superuser, "update public.releases set genre_id = $2 where id = $1", [release, genre]);

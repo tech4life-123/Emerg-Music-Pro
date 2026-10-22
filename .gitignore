@@ -13,3 +13,6 @@ storage-local/
 npm-debug.log*
 .tools/
 .local-stack/
+
+.local-stack.log
+.next-start.log

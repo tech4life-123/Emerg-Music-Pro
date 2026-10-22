@@ -27,6 +27,7 @@ export default async function ReleasePage({ params }: { params: Promise<{ id: st
             <h2 id="tracks">Tracks</h2>
             {tracks.length === 0 ? <EmptyState title="No tracks listed">This release has no tracks yet.</EmptyState> : <TrackList tracks={tracks} context={{ artist: release.artist.name, release: release.title }} />}
           </section>
+          <p className="muted"><Link href={`/report?release=${release.id}`}>Report a copyright problem</Link></p>
         </>
       )}
     </Outcome>

@@ -102,11 +102,11 @@ describe.skipIf(!available)("audio pipeline through PostgREST", () => {
     const t = await publishedTrack("e2e-ok");
     await storage.put("originals", t.originalKey, createReadStream(SAMPLE), { maxBytes: 50_000_000 });
 
-    // before processing: published but NOT playable (track not ready)
+    // the track was marked ready only so the release could be submitted; queueing a fresh upload resets it to pending
     const gate = (country = "LR") => asService().rpc("get_playback_target", { p_track: t.track, p_country: country, p_low: false });
-    expect((await gate()).data).toEqual([]);
-
     await enqueue(t.track);
+    // before processing: published but NOT playable (track not ready)
+    expect((await gate()).data).toEqual([]);
     const queued = await asUser(t.owner).from("processing_jobs").select("status, error_code").eq("track_id", t.track);
     expect(queued.data).toEqual([{ status: "queued", error_code: null }]);
 

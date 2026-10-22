@@ -15,7 +15,7 @@ async function draftTrack(label: string) {
   const owner = await createUser(db.pool, `${label}-owner`);
   const artist = await createApprovedArtist(db.pool, admin, owner, `${label} artist`);
   const release = await createDraftRelease(db.pool, owner, artist);
-  const track = await createTrack(db.pool, owner, artist, release);
+  const track = await createTrack(db.pool, owner, artist, release, "Sample Track", { pending: true });
   return { owner, artist, release, track };
 }
 const enqueue = (track: string) => query<{ job_id: string; stale_paths: string[] }>(db.pool, service, "select * from public.enqueue_processing_job($1)", [track]);

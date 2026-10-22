@@ -56,7 +56,7 @@ describe("artist applications and admin functions", () => {
   });
   it("DENIED: an application cannot be created already approved, or on behalf of someone else", async () => {
     const e = await createUser(db.pool, "erin");
-    await expect(query(db.pool, user(e), "insert into public.artist_applications (user_id, artist_name, rights_statement_accepted, status) values ($1,'Erin',true,'approved')", [e])).rejects.toThrow(/row-level security/);
+    await expect(query(db.pool, user(e), "insert into public.artist_applications (user_id, artist_name, rights_statement_accepted, status) values ($1,'Erin',true,'approved')", [e])).rejects.toThrow(/permission denied/); // status is not a column clients may write
     await expect(query(db.pool, user(e), "insert into public.artist_applications (user_id, artist_name, rights_statement_accepted) values ($1,'Fake',true)", [alice])).rejects.toThrow(/row-level security/);
   });
   it("ALLOWED: admin approval creates the artist and promotes the user", async () => {
@@ -76,6 +76,7 @@ describe("release publication rules", () => {
   });
   it("DENIED: submitting for review needs a rights declaration; ALLOWED once declared", async () => {
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
+    await createTrack(db.pool, alice, aliceArtist, rel);
     await expect(query(db.pool, user(alice), "update public.releases set status = 'in_review' where id = $1", [rel])).rejects.toThrow(/rights declaration is required/);
     await declareRights(db.pool, alice, rel);
     expect((await query(db.pool, user(alice), "update public.releases set status = 'in_review' where id = $1", [rel])).rowCount).toBe(1);
@@ -121,10 +122,11 @@ describe("user-owned data", () => {
     await expect(query(db.pool, user(admin), "insert into public.audit_log (actor_id, action, target_type, target_id) values ($1,'a','b','c')", [admin])).rejects.toThrow(/permission denied/);
   });
   it("copyright reports: anyone may file, only admins may read", async () => {
-    expect((await query(db.pool, anon, "insert into public.copyright_reports (reporter_name, reporter_email, description) values ('R','r@example.test','this track is mine, please check')")).rowCount).toBe(1);
+    const relForReport = await createDraftRelease(db.pool, alice, aliceArtist);
+    expect((await query(db.pool, anon, "insert into public.copyright_reports (release_id, reporter_name, reporter_email, description) values ($1,'R','r@example.test','this track is mine, please check')", [relForReport])).rowCount).toBe(1);
     expect((await query(db.pool, user(alice), "select 1 from public.copyright_reports")).rowCount).toBe(0);
     expect(((await query(db.pool, user(admin), "select 1 from public.copyright_reports")).rowCount ?? 0)).toBeGreaterThan(0);
-    await expect(query(db.pool, anon, "insert into public.copyright_reports (reporter_name, reporter_email, description, status) values ('R','r@example.test','this track is mine, please check','upheld')")).rejects.toThrow(/row-level security/);
+    await expect(query(db.pool, anon, "insert into public.copyright_reports (release_id, reporter_name, reporter_email, description, status) values ($1,'R','r@example.test','this track is mine, please check','upheld')", [relForReport])).rejects.toThrow(/permission denied/);
     await expect(query(db.pool, user(alice), "update public.copyright_reports set status = 'dismissed'")).rejects.toThrow(/permission denied/);
     await expect(query(db.pool, user(alice), "select public.resolve_copyright_report(gen_random_uuid(), 'dismissed', 'x')")).rejects.toThrow(/Admin only/);
     await expect(query(db.pool, anon, "select public.resolve_copyright_report(gen_random_uuid(), 'dismissed', 'x')")).rejects.toThrow(/permission denied/);
