@@ -13,9 +13,10 @@ working music player yet.
 | Works (verified, see `docs/PHASE1_REPORT.md`) | Not built yet |
 |---|---|
 | Migrations that reproduce the live Supabase schema + additive hardening | Sign-in / sign-up UI |
-| 57 allow/deny authorization tests on real PostgreSQL 16 (baseline, proven gaps, hardening, rights and playback gates) | Search, artist/album/track pages, player, playlists |
+| 57 allow/deny authorization tests on real PostgreSQL 16 (baseline, proven gaps, hardening, rights and playback gates) | Playlists, likes/follows, share links |
 | Signed short-lived upload/playback tokens, local private storage, Range streaming logic | Audio processing queue (uploads register `audio_path` only; track stays `pending`) |
 | FFmpeg worker (probe / AAC transcode / waveform) tested on a real file | Artist studio and admin dashboards (guarded placeholders only) |
+| Catalog pages: home, search, artist, release, track, genre; every state handled (Phase 2) | Player and playback UI (Phase 3) |
 | Responsive shell, design tokens, loading/empty/error/denied/not-configured states, PWA manifest + icons | Offline, payments, ads, royalties, native apps (excluded from Phase 1) |
 
 API routes (`/api/upload/*`, `/api/playback/authorize`, `/api/media/*`) are implemented over tested logic, but
@@ -63,6 +64,7 @@ Regenerate the sample fixture: `npm run fixtures:generate`.
 | `LOCAL_STORAGE_DIR` | no (`./storage-local`) | server | Git-ignored |
 | `UPLOAD_TOKEN_TTL_SECONDS` / `PLAYBACK_TOKEN_TTL_SECONDS` | no (600 / 300) | server | 30-3600 / 30-900 |
 | `MAX_UPLOAD_BYTES` | no (100 MB) | server | Upload ceiling |
+| `CATALOG_SOURCE` | no | server | `sample` = labelled fictional data for local previews only (`ALLOW_SAMPLE_CATALOG=1` needed in production builds) |
 | `R2_*` | no | server | Leave empty until you approve R2 |
 | `WORKER_DRIVER`, `FFMPEG_PATH` | no | server | `local-ffmpeg` |
 | `DATABASE_URL` | for `db:migrate` only | local | Local Postgres only; use the Supabase CLI for real projects |

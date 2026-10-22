@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { EmptyState, ErrorState, NotConfigured } from "@/components/states/States";
-import { listPublishedReleases } from "@/lib/catalog";
+import { Outcome, ReleaseGrid } from "@/components/catalog/Catalog";
+import { EmptyState } from "@/components/states/States";
+import { getCatalog } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const catalog = await listPublishedReleases();
+  const catalog = await getCatalog();
+  const [releases, genres] = catalog ? await Promise.all([catalog.newReleases(24), catalog.genres()]) : [null, null];
   return (
     <>
       <p className="eyebrow">Emerg Music</p>
@@ -16,34 +18,38 @@ export default async function HomePage() {
 
       <section className="section" aria-labelledby="new-releases">
         <h2 id="new-releases">New releases</h2>
-        {catalog.status === "unconfigured" ? (
-          <NotConfigured />
-        ) : catalog.status === "error" ? (
-          <ErrorState>The catalog could not be loaded. Nothing was changed. Please refresh in a moment.</ErrorState>
-        ) : catalog.releases.length === 0 ? (
-          <EmptyState title="No music is published yet">
-            Releases appear here after an artist submits them with rights documentation and an admin approves them. This is
-            an early foundation build and the launch catalog is still being assembled with the artists&rsquo; permission.
-          </EmptyState>
-        ) : (
-          <div className="grid">
-            {catalog.releases.map((r) => (
-              <article key={r.id} className="card">
-                <span className="chip">{r.type}</span>
-                <h3 style={{ marginTop: "0.75rem" }}>{r.title}</h3>
-                <p className="muted" style={{ margin: 0 }}>
-                  {r.artistName}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
+        <Outcome catalog={catalog} result={releases}>
+          {(list) =>
+            list.length === 0 ? (
+              <EmptyState title="No music is published yet">
+                Releases appear here after an artist submits them with rights documentation and an admin approves them.
+              </EmptyState>
+            ) : (
+              <ReleaseGrid releases={list} />
+            )
+          }
+        </Outcome>
       </section>
+
+      {genres?.status === "ok" && genres.data.length > 0 ? (
+        <section className="section" aria-labelledby="genres">
+          <h2 id="genres">Browse by genre</h2>
+          <ul className="chips">
+            {genres.data.map((g) => (
+              <li key={g.slug}>
+                <Link className="chip chip-link" href={`/genres/${g.slug}`}>
+                  {g.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="section" aria-labelledby="sections-to-come">
         <h2 id="sections-to-come">Coming in later phases</h2>
         <p className="muted">
-          Trending, playlists, artist pages and the player are not built yet, so they are not shown. See the{" "}
+          Playback, playlists, trending and the artist studio are not built yet, so they are not shown. See the{" "}
           <Link href="/onboarding">welcome screen</Link> for what Emerg Music is about.
         </p>
       </section>

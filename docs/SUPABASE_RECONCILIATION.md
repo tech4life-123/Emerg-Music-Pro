@@ -59,6 +59,7 @@ Applied to `nuqstzxolrssorvovhqf` with the owner's delegated approval, after an 
 | `...000100_harden_tracks_and_audit` | Applied (recorded as `20261022170827`) |
 | `...000200_rights_records_and_gates` | Applied (`20261022170851`) |
 | `...000300_hide_audio_paths_from_clients` | Applied (`20261022170856`) |
+| `...000400_hide_suspended_artists_releases` | **Not applied, awaiting owner approval** (replaces one RLS policy; tested locally) |
 
 Live migration versions are timestamps of when they were applied and differ from the repo file prefixes; the SQL is identical.
 Do not run `supabase db push` blindly: reconcile history first (`supabase migration repair`).

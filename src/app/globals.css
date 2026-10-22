@@ -427,3 +427,32 @@ a {
   border-radius: 4px;
   background: var(--coral-500);
 }
+
+/* ---- Catalog (Phase 2) ---- */
+.cover { aspect-ratio: 1 / 1; border-radius: 14px; width: 100%; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
+.cover-hero { max-width: 240px; }
+.release-grid { list-style: none; padding: 0; margin: 0; }
+.release-card { display: flex; flex-direction: column; gap: 0.5rem; text-decoration: none; color: inherit; height: 100%; }
+.release-card h3 { margin: 0.25rem 0 0; }
+.release-card .muted { margin: 0; }
+.release-card:focus-visible, .tracklist-title:focus-visible, .chip-link:focus-visible { outline: 2px solid #c4a1ff; outline-offset: 3px; }
+.chip-link { text-decoration: none; }
+.hero-row { display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.hero-row > div { min-width: 0; flex: 1 1 260px; }
+.hero-row h1 { margin: 0.25rem 0; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; margin: 0; list-style: none; }
+.tracklist { list-style: none; margin: 0; padding: 0; display: grid; }
+.tracklist li { display: grid; grid-template-columns: 2rem 1fr auto; gap: 0.75rem; align-items: center; padding: 0.75rem 0.25rem; border-bottom: 1px solid rgb(255 255 255 / 0.08); }
+.tracklist-title { color: inherit; font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.tracklist-title:hover { text-decoration: underline; }
+.tracklist-main { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+.tracklist-note { grid-column: 2 / -1; font-size: 0.85rem; margin-top: -0.4rem; }
+.tracklist-n, .tracklist-d { font-variant-numeric: tabular-nums; }
+.search-form { display: flex; gap: 0.5rem; margin: 1rem 0 1.5rem; max-width: 36rem; }
+.search-form input { flex: 1; min-width: 0; padding: 0.75rem 1rem; border-radius: 999px; border: 1px solid rgb(255 255 255 / 0.2); background: rgb(255 255 255 / 0.06); color: inherit; font: inherit; }
+.search-form input:focus-visible { outline: 2px solid #c4a1ff; outline-offset: 2px; }
+.result-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+.result-list a { display: block; padding: 0.75rem 1rem; border-radius: 12px; background: rgb(255 255 255 / 0.04); color: inherit; text-decoration: none; }
+.result-list a:hover, .result-list a:focus-visible { background: rgb(255 255 255 / 0.09); outline: none; }
+.sample-banner { background: #3a1f55; border-bottom: 1px solid #c4a1ff; padding: 0.5rem 1rem; font-size: 0.9rem; text-align: center; }
+.credits { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; }
