@@ -1,3 +1,10 @@
+> **CORRECTION (2026-10-25): wrong Supabase project.** Everything below was applied to the project named "Emerg Music"
+> (`nuqstzxolrssorvovhqf`), which belongs to a DIFFERENT product. The real Emerg Music Pro database is the Supabase project
+> **"emergmusic" (`mjkszpbqzeidemxeykvj`)**, org "Emerg Music Corporation", which this tooling could not reach and which has
+> NO migrations yet. All Pro changes were removed from `nuqstz…` by `ops/REVERT_old_project_nuqstz.sql` (rehearsed locally with
+> `scripts/catalog-diff.ts`: catalogs identical to the original schema; verified identical on that project afterwards by hash).
+> The migrations in `supabase/migrations/` are the right ones for the NEW project, but they have not been applied there.
+
 # Supabase reconciliation (live project `nuqstzxolrssorvovhqf`)
 
 The live Supabase project already held a working schema and data (built before this repo). We kept it. The

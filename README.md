@@ -81,6 +81,8 @@ Sign-in in the local stack uses a TEST-ONLY auth shim (`scripts/lib/auth-shim.ts
 | `DATABASE_URL` | for `db:migrate` only | local | Local Postgres only; use the Supabase CLI for real projects |
 | `TEST_DATABASE_URL` | tests only | local | Superuser URL of a throwaway server |
 
+> **Database target:** Emerg Music Pro uses Supabase project `mjkszpbqzeidemxeykvj` ("emergmusic"). Earlier docs that mention `nuqstzxolrssorvovhqf` refer to a different product; see the correction in `docs/SUPABASE_RECONCILIATION.md`.
+
 ## Manual steps only you can do
 Nothing below was done for you; no external account is connected.
 
