@@ -114,7 +114,7 @@ describe("user-owned data", () => {
     await expect(query(db.pool, user(bob), "insert into public.playlists (owner_id, name) values ($1, 'forged')", [alice])).rejects.toThrow(/row-level security/);
     const rel = await createDraftRelease(db.pool, alice, aliceArtist);
     const trk = await createTrack(db.pool, alice, aliceArtist, rel);
-    await expect(query(db.pool, user(bob), "insert into public.play_events (track_id, user_id, listened_ms) values ($1, $2, 5)", [trk, alice])).rejects.toThrow(/row-level security/);
+    await expect(query(db.pool, user(bob), "insert into public.play_events (track_id, user_id, listened_ms) values ($1, $2, 5)", [trk, alice])).rejects.toThrow(/permission denied/); // client inserts closed in the Phase 5 security migration
   });
   it("audit_log: DENIED for non-admins, ALLOWED to read for admin", async () => {
     expect((await query(db.pool, user(alice), "select 1 from public.audit_log")).rowCount).toBe(0);
