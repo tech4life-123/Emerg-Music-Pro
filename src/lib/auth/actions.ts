@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { fail, done, safeNext, text, type FormState } from "@/lib/forms";
 import { formLimits } from "@/lib/services/limits";
+import { landingFor, type AppRole } from "@/lib/auth/viewer";
 import { createUserClient } from "@/lib/supabase/server";
 
 const credentials = z.object({
@@ -23,10 +24,11 @@ export async function signInAction(_: FormState, form: FormData): Promise<FormSt
 
   const supabase = await createUserClient();
   if (!supabase) return fail("Sign-in is not available: no backend is connected.");
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   // One message for every failure: never reveal whether an account exists.
-  if (error) return fail("Email or password is incorrect.");
-  redirect(safeNext(form.get("next"), "/studio"));
+  if (error || !data.user) return fail("Email or password is incorrect.");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+  redirect(safeNext(form.get("next"), landingFor(profile?.role ? [profile.role as AppRole] : [])));
 }
 
 export async function signUpAction(_: FormState, form: FormData): Promise<FormState> {

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AccountIcon, HomeIcon, LibraryIcon, SearchIcon, ShieldIcon, StudioIcon } from "@/components/icons";
+import { AccountIcon, HomeIcon, LibraryIcon, SearchIcon, StudioIcon } from "@/components/icons";
 import { PlayerProvider } from "@/components/player/PlayerProvider";
 import { NavLinks, type NavItem } from "./NavLinks";
 
@@ -12,7 +12,6 @@ const primary: NavItem[] = [
   { href: "/studio", label: "Studio", icon: <StudioIcon /> },
   { href: "/account", label: "Account", icon: <AccountIcon /> },
 ];
-const staff: NavItem[] = [{ href: "/admin", label: "Admin", icon: <ShieldIcon /> }];
 
 function Brand({ size = 36 }: { size?: number }) {
   return (
@@ -24,8 +23,9 @@ function Brand({ size = 36 }: { size?: number }) {
 }
 
 /**
- * Responsive shell: sidebar on desktop, bottom navigation on mobile. Links are navigation only; access to
- * /studio and /admin is enforced on the server by each page and by database policies, not by showing/hiding links.
+ * Responsive shell: sidebar on desktop, bottom navigation on mobile. The listener app never links to the admin area:
+ * administrators open /admin directly (it answers 404 to everyone else). Access is enforced on the server and by
+ * database policies, never by showing or hiding links.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div>
           <div className="nav-heading">You</div>
-          <NavLinks items={[primary[3]!, primary[4]!, ...staff]} label="Secondary" />
+          <NavLinks items={[primary[3]!, primary[4]!]} label="Secondary" />
         </div>
       </aside>
       <div>

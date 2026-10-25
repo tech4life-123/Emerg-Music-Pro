@@ -28,7 +28,7 @@ export default async function Page() {
       <section className="card form">
         <p><strong>{profile?.display_name ?? "Your account"}</strong></p>
         <p className="muted">Role: {viewer.roles[0] ?? "listener"}</p>
-        <p><Link href="/studio">Artist studio</Link>{viewer.roles.includes("admin") ? <> · <Link href="/admin">Administration</Link></> : null}</p>
+        <p><Link href="/studio">Artist studio</Link></p>
         <form action={signOutAction}><button className="btn btn-ghost">Sign out</button></form>
       </section>
     </>

@@ -31,3 +31,8 @@ export function evaluateAccess(viewer: Viewer, anyOf: AppRole[]): Access {
   if (!viewer.roles.some((r) => anyOf.includes(r))) return { ok: false, reason: "forbidden" };
   return { ok: true, viewer };
 }
+
+/** Where a signed-in person lands when no explicit destination was requested. Administrators go straight to their console. */
+export function landingFor(roles: AppRole[]): string {
+  return roles.includes("admin") ? "/admin" : "/studio";
+}

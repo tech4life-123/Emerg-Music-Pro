@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { SPLASH_GUARD, Splash } from "@/components/shell/Splash";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,8 +20,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_GUARD }} />
+        <noscript><style>{".splash{display:none!important}"}</style></noscript>
+        <Splash />
+        {children}
+      </body>
     </html>
   );
 }

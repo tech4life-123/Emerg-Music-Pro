@@ -15,6 +15,10 @@ def check(name, ok, extra=""):
     results.append((name, bool(ok)))
     print(("PASS " if ok else "FAIL ") + name + (f"  [{extra}]" if extra and not ok else ""))
 
+SKIP_SPLASH = "try{sessionStorage.setItem('emerg-splash-seen','1')}catch(e){}"
+def ctx(b):
+    c = b.new_context(); c.add_init_script(SKIP_SPLASH); return c
+
 def login(page, email, password=PW, nxt="/studio"):
     page.goto(f"{BASE}/login?next={nxt}")
     page.fill("#email", email); page.fill("#password", password)
@@ -24,8 +28,8 @@ with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args=["--no-sandbox"])
 
     # ---------- access control before anything else ----------
-    anon = b.new_context(); pg = anon.new_page()
-    pg.goto(f"{BASE}/admin"); check("anon: /admin shows Admin access required", "Admin access required" in pg.content())
+    anon = ctx(b); pg = anon.new_page()
+    pg.goto(f"{BASE}/admin"); check("anon: /admin is a plain 404 (does not advertise itself)", "Page not found" in pg.content() and "Administration" not in pg.content())
     pg.goto(f"{BASE}/studio"); check("anon: /studio asks to sign in", "Sign in to use the studio" in pg.content())
     pg.goto(f"{BASE}/login"); pg.fill("#email", "artist@preview.test"); pg.fill("#password", "wrong-password-1"); pg.click("button[type=submit]")
     pg.wait_for_selector("p.form-error"); check("bad password: generic error", "Email or password is incorrect." in pg.content())
@@ -35,7 +39,8 @@ with sync_playwright() as p:
     # ---------- artist ----------
     art = pg  # already signed in as the artist
     art.goto(f"{BASE}/studio"); check("artist: studio lists seeded release", "Placeholder Tones" in art.content())
-    art.goto(f"{BASE}/admin"); check("artist: /admin denied", "Admin access required" in art.content())
+    art.goto(f"{BASE}/admin"); check("artist: /admin is a plain 404", "Page not found" in art.content() and "Administration" not in art.content())
+    art.goto(f"{BASE}/account"); check("artist: no admin link anywhere in the app", art.locator("a[href^='/admin']").count() == 0)
     art.goto(f"{BASE}/studio/releases/new")
     art.fill("#title", "E2E Single"); art.select_option("#genre_id", index=1); art.click("button:has-text('Create draft release')")
     art.wait_for_url(re.compile(r".*/studio/releases/[0-9a-f-]{36}$"))
@@ -62,11 +67,14 @@ with sync_playwright() as p:
     check("artist: status in review, no edit controls", "in review" in art.content() and art.locator("button:has-text('Add track')").count() == 0)
 
     # an artist cannot reach the admin decision surface even by URL
-    art.goto(f"{BASE}/admin/releases/{rel_id}"); check("artist: admin release page denied", "Admin access required" in art.content())
+    art.goto(f"{BASE}/admin/releases/{rel_id}"); check("artist: admin release page is a 404", "Page not found" in art.content())
 
     # ---------- admin ----------
-    adm = b.new_context(); ap = adm.new_page()
-    login(ap, "admin@preview.test", nxt="/admin"); ap.wait_for_url(re.compile(r"^[^?]*/admin$"))
+    adm = ctx(b); ap = adm.new_page()
+    ap.goto(f"{BASE}/login"); ap.fill("#email", "admin@preview.test"); ap.fill("#password", PW); ap.click("button[type=submit]")
+    ap.wait_for_url(re.compile(r"^[^?]*/admin$")); check("admin: signing in with no destination lands on /admin", True)
+    ap.goto(f"{BASE}/"); check("admin: even the admin sees no admin link in the app", ap.locator("a[href^='/admin']").count() == 0)
+    ap.goto(f"{BASE}/admin")
     ap.goto(f"{BASE}/admin/reviews"); check("admin: review queue shows the release", "E2E Single" in ap.content())
     ap.goto(f"{BASE}/admin/releases/{rel_id}")
     ap.locator("button:has-text('Publish')").click(); ap.wait_for_selector("p.form-error")
@@ -80,7 +88,7 @@ with sync_playwright() as p:
     check("admin: published", True)
 
     # ---------- public ----------
-    pub = b.new_context(); pp = pub.new_page()
+    pub = ctx(b); pp = pub.new_page()
     pp.goto(f"{BASE}/releases/{rel_id}"); check("public: release page visible", "E2E Single" in pp.content())
     track_id = re.search(r'/tracks/([0-9a-f-]{36})', pp.content()).group(1)
     r = pp.request.post(f"{BASE}/api/playback/authorize", data=json.dumps({"trackId": track_id}), headers={"content-type": "application/json", "origin": BASE})
@@ -118,6 +126,13 @@ with sync_playwright() as p:
     # ---------- sign out ----------
     art.goto(f"{BASE}/account"); art.click("button:has-text('Sign out')"); art.wait_for_url(f"{BASE}/")
     art.goto(f"{BASE}/studio"); check("sign out: studio requires sign-in again", "Sign in to use the studio" in art.content())
+    # ---------- intro splash ----------
+    fresh = b.new_context(); sp = fresh.new_page()
+    sp.goto(f"{BASE}/"); check("splash: shown on first visit", sp.locator(".splash").count() == 1 and sp.locator(".splash").is_visible())
+    check("splash: brand text present", "Emerg Music" in sp.locator(".splash").inner_text())
+    sp.locator(".splash").click(); sp.wait_for_selector(".splash", state="detached", timeout=3000); check("splash: tap skips it", True)
+    sp.reload(); check("splash: not replayed in the same session", sp.locator(".splash:visible").count() == 0)
+
     b.close()
 
 failed = [n for n, ok in results if not ok]
