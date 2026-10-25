@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /** How long the intro plays. Reduced-motion visitors get a brief, still version. */
-const SPLASH_MS = 5500;
+const SPLASH_MS = 4000;
 const SPLASH_REDUCED_MS = 1200;
 const FADE_MS = 600;
 const SEEN_KEY = "emerg-splash-seen";
@@ -15,7 +15,7 @@ const SEEN_KEY = "emerg-splash-seen";
  */
 export const SPLASH_GUARD = `try{if(sessionStorage.getItem("${SEEN_KEY}"))document.documentElement.setAttribute("data-splash","seen")}catch(e){}`;
 
-/** Full-screen intro shown once per browser session. Tap, click, Enter, Space or Escape skips it. */
+/** Full-screen intro shown once per browser session. It plays for a fixed time and then reveals the app by itself. */
 export function Splash() {
   const [phase, setPhase] = useState<"show" | "leave" | "gone">("show");
 
@@ -40,22 +40,9 @@ export function Splash() {
       }
       setPhase("gone");
     }
-    function skip() {
-      window.clearTimeout(leave);
-      window.clearTimeout(gone);
-      setPhase("leave");
-      window.setTimeout(finish, 350);
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key === "Enter" || e.key === " ") skip();
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("emerg-splash-skip", skip);
     return () => {
       window.clearTimeout(leave);
       window.clearTimeout(gone);
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("emerg-splash-skip", skip);
     };
   }, []);
 
@@ -64,7 +51,6 @@ export function Splash() {
     <div
       className={`splash${phase === "leave" ? " splash-leave" : ""}`}
       role="presentation"
-      onClick={() => window.dispatchEvent(new Event("emerg-splash-skip"))}
       style={{ ["--splash-ms" as string]: `${SPLASH_MS}ms` }}
     >
       <div className="splash-glow" aria-hidden="true" />
@@ -81,7 +67,6 @@ export function Splash() {
         </div>
       </div>
       <div className="splash-progress" aria-hidden="true"><span /></div>
-      <p className="splash-skip">Tap to skip</p>
     </div>
   );
 }

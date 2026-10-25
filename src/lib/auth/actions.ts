@@ -26,7 +26,12 @@ export async function signInAction(_: FormState, form: FormData): Promise<FormSt
   if (!supabase) return fail("Sign-in is not available: no backend is connected.");
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   // One message for every failure: never reveal whether an account exists.
-  if (error || !data.user) return fail("Email or password is incorrect.");
+  if (error || !data.user) {
+    // Server log only (never shown to the visitor, never includes the password): lets the operator tell a wrong password
+    // from a misconfigured project (e.g. an invalid API key) when the visitor only sees the generic message.
+    console.error("auth.signin_failed", JSON.stringify({ code: error?.code ?? null, status: error?.status ?? null, name: error?.name ?? null, message: error?.message ?? "no user returned" }));
+    return fail("Email or password is incorrect.");
+  }
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
   redirect(safeNext(form.get("next"), landingFor(profile?.role ? [profile.role as AppRole] : [])));
 }

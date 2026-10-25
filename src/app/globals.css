@@ -567,7 +567,6 @@ html[data-splash="seen"] .splash {
   place-items: center;
   background: var(--bg);
   overflow: hidden;
-  cursor: pointer;
   opacity: 1;
   transition: opacity 0.6s ease;
 }
@@ -582,7 +581,7 @@ html[data-splash="seen"] .splash {
   background:
     radial-gradient(closest-side, rgb(123 47 224 / 0.42), transparent 70%),
     radial-gradient(closest-side at 70% 30%, rgb(255 107 94 / 0.12), transparent 60%);
-  animation: splash-glow 5.5s ease-out both;
+  animation: splash-glow 4s ease-out both;
 }
 .splash-center {
   position: relative;
@@ -621,13 +620,13 @@ html[data-splash="seen"] .splash {
   font-size: clamp(1.9rem, 6vw, 2.6rem);
   font-weight: 800;
   letter-spacing: 0.02em;
-  animation: splash-word 1s ease-out 0.9s both;
+  animation: splash-word 0.9s ease-out 0.7s both;
 }
 .splash-tag {
   margin: 0;
   color: var(--text-muted);
   font-size: 1rem;
-  animation: splash-fade 1s ease-out 1.7s both;
+  animation: splash-fade 0.9s ease-out 1.3s both;
 }
 .splash-eq {
   display: flex;
@@ -635,7 +634,7 @@ html[data-splash="seen"] .splash {
   gap: 5px;
   height: 28px;
   margin-top: var(--space-3);
-  animation: splash-fade 0.8s ease-out 2.2s both;
+  animation: splash-fade 0.8s ease-out 1.7s both;
 }
 .splash-eq i {
   width: 5px;
@@ -663,15 +662,7 @@ html[data-splash="seen"] .splash {
   width: 100%;
   background: linear-gradient(90deg, var(--plum-500), var(--coral-500));
   transform-origin: left;
-  animation: splash-progress var(--splash-ms, 5500ms) linear both;
-}
-.splash-skip {
-  position: absolute;
-  bottom: var(--space-5);
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  animation: splash-fade 0.8s ease-out 2s both;
+  animation: splash-progress var(--splash-ms, 4000ms) linear both;
 }
 @keyframes splash-logo {
   from { opacity: 0; transform: scale(0.6); }

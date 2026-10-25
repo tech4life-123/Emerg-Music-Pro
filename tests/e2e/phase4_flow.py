@@ -130,7 +130,7 @@ with sync_playwright() as p:
     fresh = b.new_context(); sp = fresh.new_page()
     sp.goto(f"{BASE}/"); check("splash: shown on first visit", sp.locator(".splash").count() == 1 and sp.locator(".splash").is_visible())
     check("splash: brand text present", "Emerg Music" in sp.locator(".splash").inner_text())
-    sp.locator(".splash").click(); sp.wait_for_selector(".splash", state="detached", timeout=3000); check("splash: tap skips it", True)
+    sp.wait_for_selector(".splash", state="detached", timeout=8000); check("splash: leaves by itself after about 4 seconds", True)
     sp.reload(); check("splash: not replayed in the same session", sp.locator(".splash:visible").count() == 0)
 
     b.close()
