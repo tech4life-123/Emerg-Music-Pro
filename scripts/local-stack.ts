@@ -9,7 +9,8 @@
  *
  * NOT for production: the Supabase shim, the generated JWT secret and the seeded data exist only on this machine.
  * Sign-in uses a TEST-ONLY auth shim (scripts/lib/auth-shim.ts). Seeded accounts (password "preview-password-1"):
- *   admin@preview.test (administrator) and artist@preview.test (approved artist who owns the seeded release).
+ *   admin@preview.test (administrator), artist@preview.test (approved artist who owns the seeded release),
+ *   and listener@preview.test / other@preview.test (plain listeners).
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
@@ -101,6 +102,12 @@ async function main() {
   await query(db, superuser, "update auth.users set email = 'artist@preview.test' where id = $1", [owner]);
   authShim.register("admin@preview.test", admin, PW);
   authShim.register("artist@preview.test", owner, PW);
+  // Two plain listeners for the Phase 5 library tests (likes, follows, private playlists, cross-user privacy).
+  for (const label of ["listener", "other"]) {
+    const id = await createUser(db, `preview-${label}`);
+    await query(db, superuser, "update auth.users set email = $2 where id = $1", [id, `${label}@preview.test`]);
+    authShim.register(`${label}@preview.test`, id, PW);
+  }
   const release = await createDraftRelease(db, owner, artist, "Placeholder Tones (sample)");
   const genre = (await query<{ id: string }>(db, superuser, "select id from public.genres order by slug limit 1")).rows[0]!.id;
   await query(db, superuser, "update public.releases set genre_id = $2 where id = $1", [release, genre]);

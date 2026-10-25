@@ -47,3 +47,6 @@ export const PrevIcon = (p: SVGProps<SVGSVGElement>) => (
 export const CloseIcon = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base} {...p}><path d="M6 6l12 12M18 6L6 18" /></svg>
 );
+export const HeartIcon = ({ filled, ...p }: SVGProps<SVGSVGElement> & { filled?: boolean }) => (
+  <svg {...base} {...p} fill={filled ? "currentColor" : "none"}><path d="M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 6.8 4.5 4.5 0 0 1 20 9.5c0 6.1-8 11-8 11z" /></svg>
+);

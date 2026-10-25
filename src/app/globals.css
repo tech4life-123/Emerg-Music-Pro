@@ -701,3 +701,16 @@ html[data-splash="seen"] .splash {
     transform: scaleX(1);
   }
 }
+
+/* Library controls */
+.inline-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin: 0.25rem 0; }
+.inline-form input[type="text"], .inline-form input:not([type]), .inline-form select {
+  min-height: 44px; padding: 0 0.75rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: inherit; font: inherit; min-width: 0;
+}
+.inline-form select option { color: #1a0d26; }
+.inline-form input:focus-visible, .inline-form select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.lib-tracks { list-style: none; margin: 0; padding: 0; display: grid; }
+.lib-tracks li { display: grid; grid-template-columns: 2.75rem 1fr auto; gap: 0.75rem; align-items: center; padding: 0.6rem 0.25rem; border-bottom: 1px solid rgb(255 255 255 / 0.08); }
+.lib-tracks .lib-actions { display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.lib-list { list-style: none; margin: 0.75rem 0; padding: 0; display: grid; gap: 0.5rem; }
+.lib-list a { color: inherit; font-weight: 600; }

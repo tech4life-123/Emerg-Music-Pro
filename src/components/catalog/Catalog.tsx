@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LikeButton } from "@/components/library/Controls";
 import { PlayButton } from "@/components/player/PlayButton";
 import type { PlayerTrack } from "@/components/player/PlayerProvider";
 import { EmptyState, ErrorState, NotConfigured } from "@/components/states/States";
@@ -29,7 +30,8 @@ export function ReleaseGrid({ releases }: { releases: ReleaseSummary[] }) {
   );
 }
 
-export function TrackList({ tracks, context }: { tracks: TrackItem[]; context?: { artist: string; release: string } }) {
+/** `liked` is passed only for a signed-in viewer (the set of their liked track ids); signed-out viewers see no like buttons. */
+export function TrackList({ tracks, context, liked }: { tracks: TrackItem[]; context?: { artist: string; release: string }; liked?: Set<string> }) {
   const asPlayer = (t: TrackItem): PlayerTrack => ({ id: t.id, title: t.title, artist: context?.artist ?? "", release: context?.release ?? "" });
   const queue = context ? tracks.filter((t) => t.audioReady).map(asPlayer) : [];
   return (
@@ -45,7 +47,7 @@ export function TrackList({ tracks, context }: { tracks: TrackItem[]; context?: 
             </Link>
             {t.explicit ? <span className="chip" title="Explicit lyrics">E</span> : null}
           </span>
-          <span className="muted tracklist-d">{formatDuration(t.durationMs)}</span>
+          <span className="muted tracklist-d">{formatDuration(t.durationMs)}{liked ? <LikeButton trackId={t.id} title={t.title} liked={liked.has(t.id)} /> : null}</span>
           {t.audioReady ? null : <span className="muted tracklist-note">Audio not available yet</span>}
         </li>
       ))}

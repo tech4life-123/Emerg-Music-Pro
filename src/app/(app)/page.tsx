@@ -49,7 +49,7 @@ export default async function HomePage() {
       <section className="section" aria-labelledby="sections-to-come">
         <h2 id="sections-to-come">Coming in later phases</h2>
         <p className="muted">
-          Playlists, trending and the artist studio are not built yet, so they are not shown. See the{" "}
+          Charts, trending, sharing and listening history are not built yet, so they are not shown. Likes, follows and private playlists are in your <Link href="/library">Library</Link>. See the{" "}
           <Link href="/onboarding">welcome screen</Link> for what Emerg Music is about.
         </p>
       </section>

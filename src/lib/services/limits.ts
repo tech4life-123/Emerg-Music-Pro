@@ -8,6 +8,7 @@ function build() {
     auth: createRateLimiter({ limit: 10, windowMs: 60_000 }),
     report: createRateLimiter({ limit: 5, windowMs: 10 * 60_000 }),
     studio: createRateLimiter({ limit: 120, windowMs: 60_000 }),
+    library: createRateLimiter({ limit: 90, windowMs: 60_000 }),
   };
 }
 export const formLimits = (g.__emergFormLimiters ??= build());
