@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const LINKS = [["/admin", "Overview"], ["/staff/applications", "Applications"], ["/admin/reviews", "Review queue"], ["/admin/releases", "Releases"], ["/admin/reports", "Copyright reports"], ["/admin/audit", "Audit log"]] as const;
+const LINKS = [["/admin", "Overview"], ["/staff/applications", "Applications"], ["/admin/reviews", "Review queue"], ["/admin/artists", "Artists"], ["/admin/people", "Moderators"], ["/admin/releases", "Releases"], ["/admin/reports", "Copyright reports"], ["/admin/audit", "Audit log"]] as const;
 
 export function AdminNav() {
   const path = usePathname();

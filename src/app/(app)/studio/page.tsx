@@ -54,7 +54,7 @@ export default async function StudioPage() {
       {artist.status !== "approved" ? (
         <PermissionDenied title="Your artist account is not active">New releases are paused. Contact support if you think this is a mistake.</PermissionDenied>
       ) : (
-        <p><Link className="btn" href="/studio/releases/new">New release</Link></p>
+        <p><Link className="btn" href="/studio/releases/new">New release</Link> <Link className="btn btn-ghost" href="/studio/profile">Artist profile</Link></p>
       )}
       {releases.length === 0 ? (
         <EmptyState title="No releases yet">Create a draft release, add tracks, declare your rights and submit it for review.</EmptyState>

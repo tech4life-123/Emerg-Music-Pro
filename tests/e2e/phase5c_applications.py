@@ -1,7 +1,7 @@
 """
 Browser run of Milestone C2 (artist application workflow + staff review) against the LOCAL stack.
 Run:  python3 tests/e2e/phase5c_applications.py <base_url>
-Needs: other@preview.test set to role 'moderator', listener@preview.test as a plain listener (the local-stack seeds both users).
+Needs the local-stack seeds: moderator@preview.test (moderator) and listener@preview.test (plain listener).
 """
 import sys, time
 from playwright.sync_api import sync_playwright
@@ -58,7 +58,7 @@ with sync_playwright() as p:
     l.goto(f"{BASE}/staff/applications"); check("an ordinary listener gets a 404 on the staff screen", "could not be found" in text(l).lower() or "not found" in text(l).lower())
 
     # ---- moderator ----
-    m = ctx(b).new_page(); login(m, "other@preview.test")
+    m = ctx(b).new_page(); login(m, "moderator@preview.test")
     check("moderator lands on application review", "/staff/applications" in m.url, m.url)
     m.wait_for_selector(f"h2:has-text('{artist_name}')")
     check("moderator sees the submitted application with details", "band" in text(m) and "Monrovia" in text(m) and email in text(m))

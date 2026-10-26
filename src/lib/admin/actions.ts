@@ -111,3 +111,27 @@ export async function resolveReportAction(_: FormState, form: FormData): Promise
   revalidatePath("/admin", "layout");
   return done("Report updated.");
 }
+
+export async function setArtistVerifiedAction(_: FormState, form: FormData): Promise<FormState> {
+  const a = await admin(); if (!a.ok) return a.error;
+  const id = text(form, "id", 40), mode = text(form, "mode", 10);
+  if (!uuid.safeParse(id).success) return fail("Artist not found.");
+  const { error } = await a.db.rpc("set_artist_verified", { p_artist: id, p_verified: mode === "verify" });
+  if (error) return fail(dbMessage(error));
+  revalidatePath("/admin/artists");
+  return done(mode === "verify" ? "Marked as verified." : "Verification removed.");
+}
+
+/** Make someone a moderator (or back to listener) by username. Only listeners and moderators can be changed here; the database enforces it again. */
+export async function setModeratorAction(_: FormState, form: FormData): Promise<FormState> {
+  const a = await admin(); if (!a.ok) return a.error;
+  const username = text(form, "username", 30).toLowerCase().replace(/^@/, ""), role = text(form, "role", 10);
+  if (!username) return fail("Enter a username.", "username");
+  if (!["moderator", "listener"].includes(role)) return fail("Choose a role.", "role");
+  const { data: p } = await a.db.from("profiles").select("id,role").eq("username", username).maybeSingle();
+  if (!p) return fail("No one has that username.", "username");
+  const { error } = await a.db.rpc("set_user_role", { p_user: p.id as string, p_role: role });
+  if (error) return fail(error.message.includes("cannot be changed") ? "Artists and admins cannot be changed here." : dbMessage(error));
+  revalidatePath("/admin/people");
+  return done(role === "moderator" ? `@${username} is now a moderator.` : `@${username} is now a listener.`);
+}

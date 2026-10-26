@@ -27,8 +27,19 @@ export interface Genre {
   slug: string;
   name: string;
 }
+export interface ArtistProfileInfo {
+  bio: string | null;
+  artistType: string | null;
+  country: string | null;
+  hometown: string | null;
+  links: string[];
+  verified: boolean;
+  imagePath: string | null;
+  headerPath: string | null;
+  featuredReleaseId: string | null;
+}
 export interface ArtistPage {
-  artist: ArtistSummary & { bio: string | null };
+  artist: ArtistSummary & ArtistProfileInfo;
   releases: ReleaseSummary[];
 }
 export interface ReleasePage {

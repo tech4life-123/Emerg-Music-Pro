@@ -61,13 +61,25 @@ export function createSupabaseCatalog(db: SupabaseClient): CatalogRepo {
 
     async artist(slug) {
       if (!isSlug(slug)) return notFound();
-      const { data: a, error } = await db.from("artists").select("id,slug,name,bio").eq("slug", slug).eq("status", "approved").maybeSingle();
+      const { data: a, error } = await db.from("artists").select("id,slug,name,bio,artist_type,country,hometown,links,verified_at,image_url,header_url,featured_release_id").eq("slug", slug).eq("status", "approved").maybeSingle();
       if (error) return err();
       if (!a) return notFound();
       const { data, error: e2 } = await db.from("releases").select(RELEASE_COLS).eq("status", "published").eq("artist_id", a.id)
         .order("published_at", { ascending: false });
       if (e2) return err();
-      return ok({ artist: { ...artist(a as Row)!, bio: (a.bio as string | null) ?? null }, releases: releases(data as Row[]) });
+      const published = releases(data as Row[]);
+      const featured = a.featured_release_id as string | null;
+      return ok({
+        artist: {
+          ...artist(a as Row)!, bio: (a.bio as string | null) ?? null,
+          artistType: (a.artist_type as string | null) ?? null, country: (a.country as string | null) ?? null, hometown: (a.hometown as string | null) ?? null,
+          links: (a.links as string[] | null) ?? [], verified: Boolean(a.verified_at),
+          imagePath: (a.image_url as string | null) ?? null, headerPath: (a.header_url as string | null) ?? null,
+          // only ever point at a release that is actually published (the database also guards this on write)
+          featuredReleaseId: featured && published.some((r) => r.id === featured) ? featured : null,
+        },
+        releases: published,
+      });
     },
 
     async release(id) {

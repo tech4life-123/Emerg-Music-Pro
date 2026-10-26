@@ -31,7 +31,7 @@ export function createSampleCatalog(): CatalogRepo {
     },
     async artist(slug) {
       const a = isSlug(slug) ? A.find((x) => x.slug === slug) : undefined;
-      return a ? ok({ artist: { ...a, bio: "Sample biography. This artist does not exist." }, releases: R.filter((r) => r.artist.id === a.id).map(summary) }) : nf;
+      return a ? ok({ artist: { ...a, bio: "Sample biography. This artist does not exist.", artistType: null, country: null, hometown: null, links: [], verified: false, imagePath: null, headerPath: null, featuredReleaseId: null }, releases: R.filter((r) => r.artist.id === a.id).map(summary) }) : nf;
     },
     async release(id) {
       const r = isUuid(id) ? R.find((x) => x.id === id) : undefined;
