@@ -4,6 +4,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { useState } from "react";
 import { AVATAR_MAX_INPUT_BYTES, AVATAR_SIZE } from "@/lib/avatar";
 import { removeAvatarAction, setAvatarAction } from "@/lib/profile/actions";
+import { UploadStage, uploadFailureText } from "@/lib/upload-errors";
 
 const OK = ["image/jpeg", "image/png", "image/webp"];
 
@@ -33,17 +34,18 @@ export function AvatarUploader({ userId, src, supabaseUrl, anonKey }: { userId: 
     if (file.size > AVATAR_MAX_INPUT_BYTES) return setMsg({ ok: false, text: "That picture is too large (8 MB maximum)." });
     setBusy(true);
     try {
-      const blob = await cropToWebp(file);
+      const blob = await cropToWebp(file).catch((e) => { throw new UploadStage("encode", String(e)); });
       const key = `${userId}/${crypto.randomUUID()}.webp`;
       const sb = createBrowserClient(supabaseUrl, anonKey);
       const up = await sb.storage.from("avatars").upload(key, blob, { contentType: "image/webp", upsert: false });
-      if (up.error) throw new Error("upload");
+      if (up.error) throw new UploadStage("upload", up.error.message);
       const res = await setAvatarAction(`avatars/${key}`);
-      if (res.status !== "success") throw new Error(res.status === "error" ? res.message : "save");
+      if (res.status !== "success") throw new UploadStage("save", res.status === "error" ? res.message : "");
       setCurrent(URL.createObjectURL(blob));
       setMsg({ ok: true, text: "Photo updated." });
-    } catch {
-      setMsg({ ok: false, text: "We could not update your photo. Try a different picture." });
+    } catch (e) {
+      console.error("avatar_upload_failed", e);
+      setMsg({ ok: false, text: uploadFailureText(e, "photo") });
     } finally {
       setBusy(false);
     }

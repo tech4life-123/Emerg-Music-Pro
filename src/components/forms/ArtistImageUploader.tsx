@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ARTIST_IMAGE_SIZES, type ArtistImageKind } from "@/lib/artist-image";
 import { AVATAR_MAX_INPUT_BYTES } from "@/lib/avatar";
 import { cropToWebp } from "@/lib/image-crop";
+import { UploadStage, uploadFailureText } from "@/lib/upload-errors";
 import { removeArtistImageAction, setArtistImageAction } from "@/lib/studio/profile";
 
 const OK = ["image/jpeg", "image/png", "image/webp"];
@@ -26,17 +27,18 @@ export function ArtistImageUploader({ kind, artistId, src, supabaseUrl, anonKey 
     if (file.size > AVATAR_MAX_INPUT_BYTES) return setMsg({ ok: false, text: "That picture is too large (8 MB maximum)." });
     setBusy(true);
     try {
-      const blob = await cropToWebp(file, size.w, size.h, kind === "header" ? 0.8 : 0.85);
+      const blob = await cropToWebp(file, size.w, size.h, kind === "header" ? 0.8 : 0.85).catch((e) => { throw new UploadStage("encode", String(e)); });
       const name = `${artistId}/${kind}-${crypto.randomUUID()}.webp`;
       const sb = createBrowserClient(supabaseUrl, anonKey);
       const up = await sb.storage.from("artists").upload(name, blob, { contentType: "image/webp", upsert: false });
-      if (up.error) throw new Error("upload");
+      if (up.error) throw new UploadStage("upload", up.error.message);
       const res = await setArtistImageAction(kind, `artists/${name}`);
-      if (res.status !== "success") throw new Error("save");
+      if (res.status !== "success") throw new UploadStage("save", res.status === "error" ? res.message : "");
       setCurrent(URL.createObjectURL(blob));
       setMsg({ ok: true, text: `Your ${copy.noun} is updated.` });
-    } catch {
-      setMsg({ ok: false, text: `We could not update your ${copy.noun}. Try a different picture.` });
+    } catch (e) {
+      console.error("artist_image_upload_failed", kind, e);
+      setMsg({ ok: false, text: uploadFailureText(e, copy.noun) });
     } finally { setBusy(false); }
   }
 
