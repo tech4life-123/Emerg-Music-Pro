@@ -153,7 +153,7 @@ describe("play_events: listener privacy", () => {
   });
 });
 
-describe("artist_play_stats: aggregates only", () => {
+describe("artist_play_summary: aggregates only", () => {
   const range = [new Date(Date.now() - 86400000).toISOString().slice(0, 10), new Date(Date.now() + 86400000).toISOString().slice(0, 10)];
   it("ALLOWED: the artist sees counts; columns carry no user id; unique listeners are counted not named", async () => {
     const l = await goLive(db.pool, admin, "p5-stats");
@@ -161,19 +161,19 @@ describe("artist_play_stats: aggregates only", () => {
     await record(listener, l.trackId);
     await record(other, l.trackId);
     const r = await query<{ track_id: string; plays: string; unique_listeners: string; listened_ms: string }>(
-      db.pool, user(l.ownerId), "select * from public.artist_play_stats($1, $2, $3)", [l.artistId, ...range]);
+      db.pool, user(l.ownerId), "select * from public.artist_play_summary($1, $2, $3)", [l.artistId, ...range]);
     expect(r.rows).toHaveLength(1);
     expect(Object.keys(r.rows[0]!).sort()).toEqual(["day", "listened_ms", "plays", "track_id", "unique_listeners"]);
     expect(Number(r.rows[0]!.plays)).toBe(3);
-    expect(Number(r.rows[0]!.unique_listeners)).toBe(2);
+    expect(r.rows[0]!.unique_listeners).toBeNull(); // 2 listeners: fewer than 5, so hidden
     expect(Number(r.rows[0]!.listened_ms)).toBe(6000);
-    expect((await query(db.pool, user(admin), "select * from public.artist_play_stats($1, $2, $3)", [l.artistId, ...range])).rowCount).toBe(1);
+    expect((await query(db.pool, user(admin), "select * from public.artist_play_summary($1, $2, $3)", [l.artistId, ...range])).rowCount).toBe(1);
   });
   it("DENIED: another artist, a plain listener, anon; bad ranges", async () => {
     for (const who of [user(live.ownerId), user(listener)]) {
-      await expect(query(db.pool, who, "select * from public.artist_play_stats($1, $2, $3)", [(await goLive(db.pool, admin, "p5-x")).artistId, ...range])).rejects.toThrow(/Not allowed/);
+      await expect(query(db.pool, who, "select * from public.artist_play_summary($1, $2, $3)", [(await goLive(db.pool, admin, "p5-x")).artistId, ...range])).rejects.toThrow(/Not allowed/);
     }
-    await expect(query(db.pool, anon, "select * from public.artist_play_stats($1, $2, $3)", [live.artistId, ...range])).rejects.toThrow(/permission denied/);
-    await expect(query(db.pool, user(live.ownerId), "select * from public.artist_play_stats($1, '2026-01-01', '2028-01-01')", [live.artistId])).rejects.toThrow(/Invalid date range/);
+    await expect(query(db.pool, anon, "select * from public.artist_play_summary($1, $2, $3)", [live.artistId, ...range])).rejects.toThrow(/permission denied/);
+    await expect(query(db.pool, user(live.ownerId), "select * from public.artist_play_summary($1, '2026-01-01', '2028-01-01')", [live.artistId])).rejects.toThrow(/Invalid date range/);
   });
 });
