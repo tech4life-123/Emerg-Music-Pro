@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { dbMessage, done, fail, text, type FormState } from "@/lib/forms";
+import { AVATAR_PATH_RE } from "@/lib/avatar";
 import { COUNTRIES, USERNAME_RE } from "@/lib/legal";
 import { formLimits } from "@/lib/services/limits";
 import { createUserClient } from "@/lib/supabase/server";
@@ -84,4 +85,29 @@ export async function skipOnboardingAction(): Promise<void> {
   if (!c.ok) redirect("/login");
   await c.db.from("profiles").update({ onboarding_completed_at: new Date().toISOString() }).eq("id", c.userId);
   redirect("/");
+}
+
+/** Called after the browser uploaded a cropped photo to its own folder. Only the person's own path shape is accepted. */
+export async function setAvatarAction(path: string): Promise<FormState> {
+  const c = await ctx();
+  if (!c.ok) return c.error;
+  const m = AVATAR_PATH_RE.exec(path);
+  if (!m || m[1] !== c.userId) return fail("That photo could not be used.");
+  const { data: before } = await c.db.from("profiles").select("avatar_url").eq("id", c.userId).maybeSingle();
+  const { error } = await c.db.from("profiles").update({ avatar_url: path }).eq("id", c.userId);
+  if (error) return fail(dbMessage(error));
+  if (before?.avatar_url && before.avatar_url !== path) await c.db.storage.from("avatars").remove([before.avatar_url.replace(/^avatars\//, "")]);
+  revalidatePath("/account");
+  return done("Photo updated.");
+}
+
+export async function removeAvatarAction(): Promise<FormState> {
+  const c = await ctx();
+  if (!c.ok) return c.error;
+  const { data: before } = await c.db.from("profiles").select("avatar_url").eq("id", c.userId).maybeSingle();
+  const { error } = await c.db.from("profiles").update({ avatar_url: null }).eq("id", c.userId);
+  if (error) return fail(dbMessage(error));
+  if (before?.avatar_url) await c.db.storage.from("avatars").remove([before.avatar_url.replace(/^avatars\//, "")]);
+  revalidatePath("/account");
+  return done("Photo removed.");
 }
