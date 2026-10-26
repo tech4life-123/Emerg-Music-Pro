@@ -1,4 +1,4 @@
-# Phase 5D migration proposal (NOT applied to the live database)
+# Phase 5D migrations (APPLIED to the live "emergmusic" project on 2026-10-26 after approval; both verified by reading back state)
 
 Studio: release date, artist-initiated withdrawal, cover-art and rights-evidence storage, analytics that hide small unique-listener counts.
 Two migrations, applied in order (the enum value must be committed before it is used).
