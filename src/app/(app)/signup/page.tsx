@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const next = safeNext((await searchParams).next, "");
   const viewer = await getViewer();
-  if (viewer.status === "signed_in") redirect(next || "/studio");
+  if (viewer.status === "signed_in") redirect(next || "/onboarding");
   return (
     <>
       <h1>Create your account</h1>

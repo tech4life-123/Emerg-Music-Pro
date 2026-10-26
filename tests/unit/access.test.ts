@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluateAccess, type Viewer } from "@/lib/auth/viewer";
 
-const signedIn = (roles: ("listener" | "artist" | "admin")[]): Viewer => ({ status: "signed_in", userId: "u1", roles });
+const signedIn = (roles: ("listener" | "artist" | "admin")[]): Viewer => ({ status: "signed_in", userId: "u1", roles, emailVerified: true });
 
 describe("evaluateAccess (server-side page gate)", () => {
   it("allows a viewer holding any permitted role", () => {

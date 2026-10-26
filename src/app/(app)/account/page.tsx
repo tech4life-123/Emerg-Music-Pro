@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EmptyState, NotConfigured } from "@/components/states/States";
 import { getViewer } from "@/lib/auth/viewer";
 import { signOutAction } from "@/lib/auth/actions";
+import { DeletionForm, PasswordForm, ProfileForm, VerifyEmail } from "@/components/forms/ProfileForms";
 import { createUserClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Account" };
@@ -16,21 +17,29 @@ export default async function Page() {
       <>
         <h1>Account</h1>
         <EmptyState title="You are not signed in" action={<p className="row-actions"><Link className="btn" href="/login">Sign in</Link><Link className="btn btn-ghost" href="/signup">Create account</Link></p>}>
-          Sign in to apply as an artist or manage your releases. Playlists, likes and follows arrive in a later phase.
+          Sign in to apply as an artist or manage your releases. 
         </EmptyState>
       </>
     );
   const db = (await createUserClient())!;
-  const { data: profile } = await db.from("profiles").select("display_name,role").eq("id", viewer.userId).maybeSingle();
+  const [{ data: p }, { data: del }] = await Promise.all([
+    db.from("profiles").select("display_name,username,bio,country,profile_public").eq("id", viewer.userId).maybeSingle(),
+    db.from("account_deletion_requests").select("id").eq("user_id", viewer.userId).eq("status", "pending").maybeSingle(),
+  ]);
   return (
     <>
       <h1>Account</h1>
       <section className="card form">
-        <p><strong>{profile?.display_name ?? "Your account"}</strong></p>
+        <p><strong>{p?.display_name ?? "Your account"}</strong>{p?.username ? <span className="muted"> @{p.username}</span> : null}</p>
         <p className="muted">Role: {viewer.roles[0] ?? "listener"}</p>
+        <VerifyEmail verified={Boolean(viewer.emailVerified)} />
+        {p?.username && p.profile_public ? <p><Link href={`/u/${p.username}`}>View my public profile</Link></p> : null}
         <p><Link href="/studio">Artist studio</Link></p>
         <form action={signOutAction}><button className="btn btn-ghost">Sign out</button></form>
       </section>
+      <ProfileForm p={{ display_name: p?.display_name ?? "", username: p?.username ?? null, bio: p?.bio ?? null, country: p?.country ?? null, profile_public: Boolean(p?.profile_public) }} />
+      <PasswordForm />
+      <DeletionForm pending={Boolean(del)} />
     </>
   );
 }

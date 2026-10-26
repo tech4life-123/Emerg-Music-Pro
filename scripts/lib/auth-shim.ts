@@ -67,10 +67,19 @@ export function createAuthShim(opts: { secret: string; pool: Pool }) {
         passwords.set(email, { id, password });
         return send(res, 200, session(id, email));
       }
-      if (route === "/user" && req.method === "GET") {
+      if (route === "/user" && (req.method === "GET" || req.method === "PUT")) {
         const claims = verify((req.headers.authorization ?? "").replace(/^Bearer /i, ""));
-        return claims ? send(res, 200, userObj(claims.sub, claims.email)) : send(res, 401, { msg: "invalid JWT" });
+        if (!claims) return send(res, 401, { msg: "invalid JWT" });
+        if (req.method === "PUT") {
+          const body = await read(req);
+          const acct = passwords.get(claims.email);
+          if (typeof body.password === "string" && acct && body.password.length >= 8) acct.password = body.password;
+        }
+        const row = await opts.pool.query("select email_confirmed_at from auth.users where id = $1", [claims.sub]);
+        return send(res, 200, { ...userObj(claims.sub, claims.email), email_confirmed_at: row.rows[0]?.email_confirmed_at ?? null });
       }
+      // Recovery / resend: GoTrue answers 200 and sends mail; here nothing is sent (the shim has no mailbox).
+      if ((route === "/recover" || route === "/resend") && req.method === "POST") { await read(req); return send(res, 200, {}); }
       if (route === "/logout") return send(res, 204, undefined);
       return send(res, 404, { msg: "not implemented in the local auth shim" });
     },

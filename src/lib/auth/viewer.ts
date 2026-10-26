@@ -6,7 +6,7 @@ export type AppRole = "listener" | "artist" | "admin";
 export type Viewer =
   | { status: "unconfigured" }
   | { status: "anonymous" }
-  | { status: "signed_in"; userId: string; roles: AppRole[] };
+  | { status: "signed_in"; userId: string; roles: AppRole[]; emailVerified?: boolean };
 
 /** Who is looking? Identity comes from the verified Supabase session (getUser hits the auth server), never from a cookie claim. */
 export async function getViewer(): Promise<Viewer> {
@@ -16,7 +16,7 @@ export async function getViewer(): Promise<Viewer> {
   if (error || !data.user) return { status: "anonymous" };
   // Live schema: one role per profile (enum user_role). Column grants stop a user changing their own role.
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-  return { status: "signed_in", userId: data.user.id, roles: profile?.role ? [profile.role as AppRole] : [] };
+  return { status: "signed_in", userId: data.user.id, roles: profile?.role ? [profile.role as AppRole] : [], emailVerified: Boolean(data.user.email_confirmed_at) };
 }
 
 export type Access = { ok: true; viewer: Extract<Viewer, { status: "signed_in" }> } | { ok: false; reason: "unconfigured" | "anonymous" | "forbidden" };
@@ -33,6 +33,8 @@ export function evaluateAccess(viewer: Viewer, anyOf: AppRole[]): Access {
 }
 
 /** Where a signed-in person lands when no explicit destination was requested. Administrators go straight to their console. */
-export function landingFor(roles: AppRole[]): string {
-  return roles.includes("admin") ? "/admin" : "/studio";
+export function landingFor(roles: AppRole[], onboarded = true): string {
+  if (roles.includes("admin")) return "/admin";
+  if (roles.includes("artist")) return "/studio";
+  return onboarded ? "/" : "/onboarding";
 }
