@@ -26,10 +26,10 @@ describe("policy helpers are no longer public API functions", () => {
   });
   it("the rewritten admin functions still enforce admin-only", async () => {
     const owner = await createUser(db.pool, "fix-nonadmin");
-    await expect(query(db.pool, user(owner), "select public.moderate_release(gen_random_uuid(), 'removed', 'x')")).rejects.toThrow(/Admin only/);
-    await expect(query(db.pool, user(owner), "select public.review_rights_record(gen_random_uuid(), 'approved', null)")).rejects.toThrow(/Admin only/);
-    await expect(query(db.pool, user(owner), "select public.resolve_copyright_report(gen_random_uuid(), 'upheld', 'x')")).rejects.toThrow(/Admin only/);
-    await expect(query(db.pool, user(owner), "select public.approve_artist_application(gen_random_uuid())")).rejects.toThrow(/Admin only/);
+    await expect(query(db.pool, user(owner), "select public.moderate_release(gen_random_uuid(), 'removed', 'x')")).rejects.toThrow(/(Admin|Staff) only/);
+    await expect(query(db.pool, user(owner), "select public.review_rights_record(gen_random_uuid(), 'approved', null)")).rejects.toThrow(/(Admin|Staff) only/);
+    await expect(query(db.pool, user(owner), "select public.resolve_copyright_report(gen_random_uuid(), 'upheld', 'x')")).rejects.toThrow(/(Admin|Staff) only/);
+    await expect(query(db.pool, user(owner), "select public.approve_artist_application(gen_random_uuid())")).rejects.toThrow(/(Admin|Staff) only/);
   });
 });
 

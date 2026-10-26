@@ -147,7 +147,7 @@ describe("other write surfaces", () => {
     await expect(query(db.pool, user(u), `insert into public.artist_applications (${cols}, decision_reason) values ($1,'Yes',true,'pre-approved')`, [u])).rejects.toThrow(/permission denied/);
     await expect(query(db.pool, user(u), `insert into public.artist_applications (${cols}, reviewed_at) values ($1,'Yes',true, now())`, [u])).rejects.toThrow(/permission denied/);
     expect((await query(db.pool, user(u), `insert into public.artist_applications (${cols}, bio, links) values ($1,'Yes',true,'A bio','{https://example.test}')`, [u])).rowCount).toBe(1);
-    await expect(query(db.pool, user(u), `insert into public.artist_applications (${cols}) values ($1,'Again',true)`, [u])).rejects.toThrow(/one_pending_per_user/);
+    await expect(query(db.pool, user(u), `insert into public.artist_applications (${cols}) values ($1,'Again',true)`, [u])).rejects.toThrow(/one_active_per_user/);
   });
   it("a release cannot be created with publication fields pre-filled", async () => {
     const owner = await createUser(db.pool, "rel-owner");
