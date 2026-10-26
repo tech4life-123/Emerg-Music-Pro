@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 afterAll(async () => db.drop());
 
-const q = <T = Record<string, unknown>>(who: ReturnType<typeof user> | typeof anon | typeof superuser, sql: string, args: unknown[] = []) => query<T>(db.pool, who, sql, args);
+const q = <T extends object = Record<string, unknown>>(who: ReturnType<typeof user> | typeof anon | typeof superuser, sql: string, args: unknown[] = []) => query<T>(db.pool, who, sql, args);
 
 async function draft(uid: string, name = `Band ${randomUUID().slice(0, 6)}`) {
   const r = await q<{ id: string }>(user(uid), `insert into public.artist_applications (user_id, artist_name, rights_statement_accepted, status) values ($1,$2,true,'draft') returning id`, [uid, name]);

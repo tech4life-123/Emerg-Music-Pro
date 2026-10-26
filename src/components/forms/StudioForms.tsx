@@ -1,26 +1,9 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { addRightsRecordAction, addTrackAction, applyAsArtistAction, createReleaseAction } from "@/lib/studio/actions";
+import { addRightsRecordAction, addTrackAction, createReleaseAction } from "@/lib/studio/actions";
 import { IDLE } from "@/lib/forms";
-import { Field, FormMessage, SelectField, TextArea, TextField } from "./Field";
-import { APPLICATION_STATEMENT } from "@/lib/studio/rights-statement";
-
-export function ApplyForm() {
-  const [state, action, pending] = useActionState(applyAsArtistAction, IDLE);
-  return (
-    <form action={action} className="form card" noValidate>
-      <TextField id="artist_name" label="Artist or band name" required maxLength={80} state={state} />
-      <TextArea id="bio" label="About you" hint="A few sentences. Shown on your artist page once approved." maxLength={2000} state={state} />
-      <TextArea id="links" label="Links (optional)" hint="Where we can hear your work: one per line, up to 5." rows={3} state={state} />
-      <Field id="accept" label="" error={state.status === "error" && state.field === "accept" ? state.message : undefined}>
-        <div className="check-row"><input id="accept" name="accept" type="checkbox" /><label htmlFor="accept">{APPLICATION_STATEMENT}</label></div>
-      </Field>
-      <FormMessage state={state} />
-      <button className="btn" disabled={pending}>{pending ? "Sending…" : "Send application"}</button>
-    </form>
-  );
-}
+import { FormMessage, SelectField, TextField } from "./Field";
 
 export function NewReleaseForm({ genres }: { genres: { id: string; name: string }[] }) {
   const [state, action, pending] = useActionState(createReleaseAction, IDLE);

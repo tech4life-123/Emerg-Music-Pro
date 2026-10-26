@@ -25,7 +25,7 @@ export function dbMessage(error: { message?: string; code?: string } | null | un
   const m = error.message ?? "";
   if (error.code === "P0001") return m;
   if (/row-level security|permission denied/i.test(m)) return "You are not allowed to do that.";
-  if (error.code === "23505") return /one_pending_per_user/.test(m) ? "You already have an application waiting for review." : "That already exists.";
+  if (error.code === "23505") return /one_pending_per_user|one_active_per_user/.test(m) ? "You already have an application in progress." : "That already exists.";
   if (error.code === "23514") return "Please check the values you entered.";
   return "Something went wrong. Nothing was changed.";
 }

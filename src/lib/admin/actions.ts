@@ -14,11 +14,19 @@ async function admin() {
   if (!db) return { ok: false, error: fail("No backend is connected.") } as const;
   return { ok: true, db } as const;
 }
+/** Staff (admin or moderator) gate: used only by application review. The database functions check is_staff() again. */
+async function staff() {
+  const access = evaluateAccess(await getViewer(), ["admin", "moderator"]);
+  if (!access.ok) return { ok: false, error: fail("You are not allowed to do that.") } as const;
+  const db = await createUserClient();
+  if (!db) return { ok: false, error: fail("No backend is connected.") } as const;
+  return { ok: true, db } as const;
+}
 const uuid = z.string().uuid();
 const need = (v: string, what: string): FormState | null => (v.length >= 3 ? null : fail(`Give a reason (${what}).`, "reason"));
 
 export async function decideApplicationAction(_: FormState, form: FormData): Promise<FormState> {
-  const a = await admin(); if (!a.ok) return a.error;
+  const a = await staff(); if (!a.ok) return a.error;
   const id = text(form, "id", 40), decision = text(form, "decision", 10), reason = text(form, "reason", 500);
   if (!uuid.safeParse(id).success) return fail("Application not found.");
   if (decision === "approve") {
@@ -30,7 +38,29 @@ export async function decideApplicationAction(_: FormState, form: FormData): Pro
     if (error) return fail(dbMessage(error));
   } else return fail("Choose approve or reject.");
   revalidatePath("/admin", "layout");
+  revalidatePath("/staff", "layout");
   return done(decision === "approve" ? "Approved." : "Rejected.");
+}
+
+export async function startReviewAction(_: FormState, form: FormData): Promise<FormState> {
+  const a = await staff(); if (!a.ok) return a.error;
+  const id = text(form, "id", 40);
+  if (!uuid.safeParse(id).success) return fail("Application not found.");
+  const { error } = await a.db.rpc("start_application_review", { p_application: id });
+  if (error) return fail(dbMessage(error));
+  revalidatePath("/staff", "layout");
+  return done("Marked as under review.");
+}
+
+export async function requestInfoAction(_: FormState, form: FormData): Promise<FormState> {
+  const a = await staff(); if (!a.ok) return a.error;
+  const id = text(form, "id", 40), message = text(form, "reason", 1000);
+  if (!uuid.safeParse(id).success) return fail("Application not found.");
+  if (message.length < 3) return fail("Write what you need from the applicant.", "reason");
+  const { error } = await a.db.rpc("request_application_info", { p_application: id, p_message: message });
+  if (error) return fail(dbMessage(error));
+  revalidatePath("/staff", "layout");
+  return done("Request sent to the applicant.");
 }
 
 export async function reviewRightsAction(_: FormState, form: FormData): Promise<FormState> {

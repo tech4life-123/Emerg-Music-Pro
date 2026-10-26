@@ -22,19 +22,6 @@ async function ctx() {
 
 const uuid = z.string().uuid();
 
-export async function applyAsArtistAction(_: FormState, form: FormData): Promise<FormState> {
-  const c = await ctx(); if (!c.ok) return c.error;
-  const name = text(form, "artist_name", 80), bio = text(form, "bio", 2000);
-  if (name.length < 2) return fail("Enter your artist name (at least 2 characters).", "artist_name");
-  if (form.get("accept") !== "on") return fail("You must accept the statement to apply.", "accept");
-  const links = text(form, "links", 1000).split(/\s+/).filter(Boolean).slice(0, 5);
-  for (const l of links) { try { if (!/^https?:$/.test(new URL(l).protocol)) throw 0; } catch { return fail("Links must start with http:// or https://", "links"); } }
-  const { error } = await c.db.from("artist_applications").insert({ user_id: c.viewer.userId, artist_name: name, bio: bio || null, links, rights_statement_accepted: true });
-  if (error) return fail(dbMessage(error));
-  revalidatePath("/studio");
-  redirect("/studio");
-}
-
 async function myArtistId(db: NonNullable<Awaited<ReturnType<typeof createUserClient>>>, userId: string) {
   const { data } = await db.from("artists").select("id").eq("owner_id", userId).eq("status", "approved").maybeSingle();
   return (data?.id as string | undefined) ?? null;

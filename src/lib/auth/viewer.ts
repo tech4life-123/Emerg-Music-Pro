@@ -1,7 +1,7 @@
 import "server-only";
 import { createUserClient } from "@/lib/supabase/server";
 
-export type AppRole = "listener" | "artist" | "admin";
+export type AppRole = "listener" | "artist" | "moderator" | "admin";
 
 export type Viewer =
   | { status: "unconfigured" }
@@ -35,6 +35,7 @@ export function evaluateAccess(viewer: Viewer, anyOf: AppRole[]): Access {
 /** Where a signed-in person lands when no explicit destination was requested. Administrators go straight to their console. */
 export function landingFor(roles: AppRole[], onboarded = true): string {
   if (roles.includes("admin")) return "/admin";
+  if (roles.includes("moderator")) return "/staff/applications";
   if (roles.includes("artist")) return "/studio";
   return onboarded ? "/" : "/onboarding";
 }
