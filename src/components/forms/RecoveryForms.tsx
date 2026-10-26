@@ -5,12 +5,14 @@ import { useActionState } from "react";
 import { forgotPasswordAction, resetPasswordAction } from "@/lib/auth/actions";
 import { IDLE } from "@/lib/forms";
 import { FormMessage, TextField } from "./Field";
+import { Turnstile } from "./Turnstile";
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(forgotPasswordAction, IDLE);
   return (
     <form action={action} className="form card" noValidate>
       <TextField id="email" label="Email" type="email" autoComplete="email" required state={state} />
+      <Turnstile resetKey={state} />
       <FormMessage state={state} />
       <button className="btn" type="submit" disabled={pending}>{pending ? "Please wait…" : "Send reset link"}</button>
       <p className="muted"><Link href="/login">Back to sign in</Link></p>

@@ -15,6 +15,9 @@ const credentials = z.object({
   password: z.string().min(8, "Use at least 8 characters.").max(72, "Use at most 72 characters."),
 });
 
+/** Turnstile token added to the form by the widget; undefined when no widget is configured. */
+const captcha = (form: FormData) => String(form.get("cf-turnstile-response") ?? "") || undefined;
+
 async function ip(): Promise<string> {
   return (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
@@ -26,7 +29,7 @@ export async function signInAction(_: FormState, form: FormData): Promise<FormSt
 
   const supabase = await createUserClient();
   if (!supabase) return fail("Sign-in is not available: no backend is connected.");
-  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword({ ...parsed.data, options: { captchaToken: captcha(form) } });
   // One message for every failure: never reveal whether an account exists.
   if (error || !data.user) {
     // Server log only (never shown to the visitor, never includes the password): lets the operator tell a wrong password
@@ -54,7 +57,7 @@ export async function signUpAction(_: FormState, form: FormData): Promise<FormSt
   if (free === false) return fail("That username is taken or not allowed. Try another.", "username");
   const { data, error } = await supabase.auth.signUp({
     ...parsed.data,
-    options: { data: { display_name: name, username, terms_version: TERMS_VERSION }, emailRedirectTo: `${await siteOrigin()}/auth/callback?next=/onboarding` },
+    options: { captchaToken: captcha(form), data: { display_name: name, username, terms_version: TERMS_VERSION }, emailRedirectTo: `${await siteOrigin()}/auth/callback?next=/onboarding` },
   });
   if (error) return fail("We could not create that account. If you already have one, sign in instead.");
   if (data.session) redirect(safeNext(form.get("next"), "/onboarding"));
@@ -69,7 +72,7 @@ export async function forgotPasswordAction(_: FormState, form: FormData): Promis
   if (!formLimits.auth.check(`recover:${await ip()}`)) return fail("Too many attempts. Wait a minute and try again.");
   const supabase = await createUserClient();
   if (!supabase) return fail("Password recovery is not available: no backend is connected.");
-  const { error } = await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${await siteOrigin()}/auth/callback?next=/reset-password` });
+  const { error } = await supabase.auth.resetPasswordForEmail(email.data, { captchaToken: captcha(form), redirectTo: `${await siteOrigin()}/auth/callback?next=/reset-password` });
   if (error) console.error("auth.recover_failed", JSON.stringify({ code: error.code ?? null, status: error.status ?? null }));
   return done("If that email has an account, a reset link is on its way. It can take a few minutes.");
 }

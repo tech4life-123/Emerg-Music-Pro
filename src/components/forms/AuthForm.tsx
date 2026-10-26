@@ -5,6 +5,7 @@ import { startTransition, useActionState } from "react";
 import { signInAction, signUpAction } from "@/lib/auth/actions";
 import { IDLE } from "@/lib/forms";
 import { FormMessage, TextField } from "./Field";
+import { Turnstile } from "./Turnstile";
 
 export function AuthForm({ mode, next }: { mode: "signin" | "signup"; next?: string }) {
   const [state, action, pending] = useActionState(mode === "signin" ? signInAction : signUpAction, IDLE);
@@ -31,6 +32,7 @@ export function AuthForm({ mode, next }: { mode: "signin" | "signup"; next?: str
           {state.status === "error" && state.field === "terms" ? <p className="field-error" role="alert">{state.message}</p> : null}
         </div>
       ) : null}
+      <Turnstile resetKey={state} />
       <FormMessage state={state} />
       <button className="btn" type="submit" disabled={pending}>{pending ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}</button>
       <p className="muted">
